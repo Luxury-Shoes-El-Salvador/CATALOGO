@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Generador de Enlaces por Par · Luxury Shoes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#faf8f4;--white:#ffffff;--dark:#1c1a17;--mid:#5a5750;
+  --border:#e8e3db;--border2:#d4cec4;--accent:#c8a96e;--accent2:#b8894e;
+  --green:#1a5c38;--green-bg:#edf5f0;
+  --shadow-sm:0 2px 8px rgba(28,26,23,.07);
+  --shadow-md:0 8px 32px rgba(28,26,23,.12);
+  --r:14px;--t:.22s cubic-bezier(.4,0,.2,1);
+}
+body.dark{
+  --cream:#121110;--white:#1c1a18;--dark:#f0ece4;--mid:#8a8478;
+  --border:#2a2724;--border2:#363230;
+  --green:#2d9e5f;--green-bg:#0e2a1a;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.3);
+  --shadow-md:0 8px 32px rgba(0,0,0,.4);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;transition:background var(--t),color var(--t)}
+
+/* HEADER */
+header{
+  position:sticky;top:0;z-index:100;background:var(--dark);
+  padding:0 clamp(1rem,4vw,2.5rem);height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo-name{font-family:'Inter',sans-serif;font-size:1.15rem;color:#fff;font-weight:500}
+.logo-sub{font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:2px}
+.icon-btn{
+  width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.2);
+  background:transparent;color:rgba(255,255,255,.6);cursor:pointer;font-size:.95rem;
+  display:flex;align-items:center;justify-content:center;transition:all var(--t);
+}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* HERO */
+.hero{
+  background:var(--dark);color:#fff;
+  padding:2.5rem clamp(1rem,4vw,2.5rem) 2rem;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.hero-tag{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:.6rem}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,4vw,2.2rem);font-weight:400;line-height:1.2;margin-bottom:.5rem}
+.hero p{font-size:.88rem;color:rgba(255,255,255,.5);max-width:480px;line-height:1.6}
+
+/* MAIN */
+main{max-width:780px;margin:0 auto;padding:2rem clamp(1rem,4vw,2.5rem) 4rem}
+
+/* SECTION LABEL */
+.sec-label{
+  font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--mid);font-weight:500;margin-bottom:.75rem;
+  display:flex;align-items:center;gap:.5rem;
+}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* CARDS */
+.card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r);padding:1.25rem 1.5rem;margin-bottom:1.25rem;
+  transition:border-color var(--t);
+}
+
+/* SEARCH */
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--mid);font-weight:500}
+.fg input{
+  padding:.6rem .9rem;border:1px solid var(--border2);border-radius:10px;
+  background:var(--cream);font-family:'Inter',sans-serif;font-size:.9rem;color:var(--dark);
+  outline:none;transition:border-color var(--t);
+}
+.fg input:focus{border-color:var(--accent)}
+
+/* RESULT EMPTY */
+.result-empty{font-family:'Inter',sans-serif;font-size:.82rem;color:var(--mid);font-style:italic}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--green);color:#fff;padding:.6rem 1.4rem;border-radius:100px;
+  font-size:.82rem;font-weight:500;z-index:999;transition:transform .3s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;white-space:nowrap;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* GLASS BADGE */
+.glass-badge{
+  position:fixed;bottom:18px;right:18px;z-index:9999;
+  background:rgba(0,0,0,.7);color:white;
+  padding:7px 12px;border-radius:999px;
+  font-family:'Inter',sans-serif;font-size:.7rem;
+  pointer-events:none;
+}
+
+/* SHEET STATUS */
+.sheet-status{
+  display:flex;align-items:center;gap:.5rem;
+  font-size:.72rem;color:var(--mid);margin-top:.85rem;
+  padding:.4rem .75rem;border-radius:8px;
+  background:var(--cream);border:1px solid var(--border);
+  transition:all var(--t);
+}
+.sheet-status.loading{color:var(--accent2)}
+.sheet-status.ok{color:var(--green)}
+.sheet-status.err{color:#a03030}
+.sheet-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+.sheet-dot.spin{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* PAR ITEMS */
+.par-item{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.6rem .65rem;border:1px solid var(--border);border-radius:10px;
+  margin-bottom:.5rem;transition:border-color var(--t);
+}
+.par-item:hover{border-color:var(--accent)}
+.par-item img{
+  width:56px;height:56px;border-radius:8px;object-fit:cover;
+  background:var(--cream);flex-shrink:0;
+}
+.par-info{flex:1;min-width:0}
+.par-name{
+  font-size:.87rem;font-weight:600;color:var(--dark);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.par-meta{font-size:.73rem;color:var(--mid);margin-top:2px}
+.par-meta .vendido{color:#a03030;font-weight:600}
+.par-actions{display:flex;gap:.4rem;flex-shrink:0}
+.par-actions button{
+  width:36px;height:36px;border-radius:8px;flex-shrink:0;
+  border:1px solid var(--border2);background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+  transition:all var(--t);
+}
+.par-actions button:hover{background:var(--dark);color:#fff;border-color:var(--dark)}
+.par-actions button.wa{border-color:#25d366;color:#25d366}
+.par-actions button.wa:hover{background:#25d366;color:#fff}
+.results-count{font-size:.72rem;color:var(--mid);margin-bottom:.6rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo-name">Luxury Shoes</div>
+    <div class="logo-sub">Enlace por par</div>
+  </div>
+  <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Cambiar tema">🌙</button>
+</header>
+
+<div class="hero">
+  <div class="hero-tag">Compartir por WhatsApp</div>
+  <h1>Genera el enlace de un par específico</h1>
+  <p>Busca el zapato por modelo, talla o suela y comparte el enlace directo a ese par exacto — no a un listado ni a una talla completa.</p>
+</div>
+
+<main>
+
+  <div class="sec-label">Buscar par</div>
+  <div class="card">
+    <div class="fg">
+      <label>🔎 Modelo, talla, suela...</label>
+      <input type="text" id="par-search" placeholder="ej: Nike Air Force talla 8" oninput="renderParResults()" aria-label="Buscar par específico" autofocus>
+    </div>
+    <div id="sheet-status" class="sheet-status loading">
+      <span class="sheet-dot spin" id="sheet-dot"></span>
+      <span id="sheet-msg">Cargando catálogo…</span>
+    </div>
+  </div>
+
+  <div class="sec-label">Resultados</div>
+  <div class="card">
+    <div id="par-results">
+      <span class="result-empty">Escribe arriba para buscar el par que quieres compartir.</span>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast">✓ Enlace copiado</div>
+<div class="glass-badge">Luxury Shoes · Enlace por par v2.0</div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════
+   CONFIG — misma fuente que el catálogo
+═══════════════════════════════════════ */
+const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS7e_IekI9tZJaDGPWd8xw1wFUOpFSiQZOk-AWZwfPTmrG-PgVbXFaSxujXln8PAQqx275piuJaLLCm/pub?gid=1069283032&single=true&output=csv';
+const BASE_URL  = 'https://luxury-shoes-el-salvador.github.io/CATALOGO/';
+
+const COLS = {
+  tallaUSA: 'TALLA EN USA',
+  tallaCM:  'TALLA EN CM',
+  modelo:   'TIPO DE ZAPATO',
+  suela:    'SUELA',
+  disp:     'DISPONIBILIDAD',
+  img1:'IMAGEN 1', img2:'IMAGEN 2', img3:'IMAGEN 3', img4:'IMAGEN 4',
+};
+
+/* ═══════════════════════════════════════
+   CSV PARSER (igual al catálogo)
+═══════════════════════════════════════ */
+function splitCSVRow(line){
+  const r=[];let c='';let q=false;
+  for(let i=0;i<line.length;i++){
+    if(line[i]==='"'){q=!q;continue}
+    if(line[i]===','&&!q){r.push(c);c='';continue}
+    c+=line[i];
+  }
+  r.push(c);return r;
+}
+
+function parseCSV(text){
+  const lines = text.trim().replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  if(!lines.length) return [];
+  const headers = splitCSVRow(lines[0]);
+  return lines.slice(1).map(line => {
+    const vals = splitCSVRow(line);
+    const obj  = {};
+    headers.forEach((h,i) => obj[h.trim()] = (vals[i]||'').trim());
+    return obj;
+  });
+}
+
+function cv(v){ const t=(v||'').trim(); return t==='\u200B'?'':t; }
+
+function driveId(url){
+  if(!url) return null;
+  const m = url.match(/[?&]id=([^&\s]+)/)
+           ||url.match(/\/d\/([^/?#\s]+)/)
+           ||url.match(/open\?id=([^&\s]+)/);
+  return m?m[1].trim():null;
+}
+function thumbUrl(id,size=100){
+  return id?`https://drive.google.com/thumbnail?id=${id}&sz=w${size}`:null;
+}
+
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ═══════════════════════════════════════
+   SHEET STATUS UI
+═══════════════════════════════════════ */
+function setStatus(state, msg){
+  const box = document.getElementById('sheet-status');
+  const dot = document.getElementById('sheet-dot');
+  const txt = document.getElementById('sheet-msg');
+  box.className = 'sheet-status ' + state;
+  dot.className = 'sheet-dot' + (state === 'loading' ? ' spin' : '');
+  txt.textContent = msg;
+}
+
+/* ═══════════════════════════════════════
+   PARES INDIVIDUALES
+═══════════════════════════════════════ */
+let allPares = [];
+
+async function loadPares(){
+  setStatus('loading', 'Cargando catálogo…');
+  try{
+    const res = await fetch(SHEET_CSV);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    const rows = parseCSV(text);
+
+    allPares = rows
+      .filter(r => cv(r[COLS.tallaUSA]))
+      .map(r => {
+        const imgIds = [];
+        const addId = raw => {
+          const id = driveId(cv(raw));
+          if(id && !imgIds.includes(id)) imgIds.push(id);
+        };
+        addId(r[COLS.img1]); addId(r[COLS.img2]);
+        addId(r[COLS.img3]); addId(r[COLS.img4]);
+        return {
+          modelo: cv(r[COLS.modelo]) || 'Sin modelo',
+          talla:  cv(r[COLS.tallaUSA]),
+          cm:     cv(r[COLS.tallaCM]),
+          suela:  cv(r[COLS.suela]),
+          disp:   cv(r[COLS.disp]).toUpperCase(),
+          parId:  imgIds[0] || null,
+        };
+      })
+      .filter(p => p.parId); // solo pares con al menos una foto (id único)
+
+    setStatus('ok', `✓ ${allPares.length} pares listos para compartir`);
+    renderParResults();
+
+  } catch(err){
+    console.error('Error cargando catálogo:', err);
+    setStatus('err', '✕ No se pudo cargar el catálogo. Verifica la conexión o que el Sheet esté publicado.');
+  }
+}
+
+function renderParResults(){
+  const q   = document.getElementById('par-search').value.trim().toLowerCase();
+  const box = document.getElementById('par-results');
+
+  if(!q){
+    box.innerHTML = '<span class="result-empty">Escribe arriba para buscar el par que quieres compartir.</span>';
+    return;
+  }
+
+  const matches = allPares.filter(p =>
+    `${p.modelo} ${p.talla} ${p.cm} ${p.suela}`.toLowerCase().includes(q)
+  ).slice(0, 30);
+
+  if(!matches.length){
+    box.innerHTML = '<span class="result-empty">No se encontraron pares con esa búsqueda.</span>';
+    return;
+  }
+
+  const countLabel = `<div class="results-count">${matches.length} par(es) encontrados</div>`;
+
+  box.innerHTML = countLabel + matches.map(p => {
+    const thumb = thumbUrl(p.parId, 100);
+    const vendidoTag = p.disp === 'VENDIDO' ? ' · <span class="vendido">Vendido</span>' : '';
+    return `
+    <div class="par-item">
+      <img src="${thumb}" alt="${esc(p.modelo)}" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="par-info">
+        <div class="par-name">${esc(p.modelo)}</div>
+        <div class="par-meta">Talla ${esc(p.talla)}${p.cm ? ' · '+esc(p.cm)+' cm' : ''}${vendidoTag}</div>
+      </div>
+      <div class="par-actions">
+        <button onclick="copyParUrl('${p.parId}')" title="Copiar enlace" aria-label="Copiar enlace">🔗</button>
+        <button class="wa" onclick="shareParWa('${p.parId}','${esc(p.modelo).replace(/'/g,"\\'")}','${esc(p.talla)}','${esc(p.cm)}')" title="Compartir por WhatsApp" aria-label="Compartir por WhatsApp">💬</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildParUrl(parId){
+  return BASE_URL + '?par=' + parId;
+}
+
+function copyParUrl(parId){
+  const url = buildParUrl(parId);
+  navigator.clipboard.writeText(url).then(showToast).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast();
+  });
+}
+
+function shareParWa(parId, modelo, talla, cm){
+  const url = buildParUrl(parId);
+  const msg = encodeURIComponent(
+    `Hola! Aquí está el par que te comparto 👟\n${modelo} - Talla ${talla}${cm ? ' ('+cm+' cm)' : ''}\n${url}`
+  );
+  window.open('https://wa.me/?text=' + msg, '_blank');
+}
+
+function showToast(){
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// THEME
+function toggleTheme(){
+  const dark = document.body.classList.toggle('dark');
+  document.getElementById('theme-btn').textContent = dark ? '☀️' : '🌙';
+  localStorage.setItem('ls_gen_theme', dark ? 'dark' : 'light');
+}
+(function initTheme(){
+  if(localStorage.getItem('ls_gen_theme') === 'dark'){
+    document.body.classList.add('dark');
+    document.getElementById('theme-btn').textContent = '☀️';
+  }
+})();
+
+// INIT
+window.addEventListener('DOMContentLoaded', () => {
+  loadPares();
+});
+</script>
+
+</body>
+</html>

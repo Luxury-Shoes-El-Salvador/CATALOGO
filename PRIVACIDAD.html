@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Política de Privacidad · Luxury Shoes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#faf8f4;--white:#ffffff;--dark:#1c1a17;--mid:#5a5750;
+  --border:#e8e3db;--border2:#d4cec4;--accent:#c8a96e;--accent2:#b8894e;
+  --shadow-sm:0 2px 8px rgba(28,26,23,.07);
+  --r:14px;--t:.22s cubic-bezier(.4,0,.2,1);
+}
+body.dark{
+  --cream:#121110;--white:#1c1a18;--dark:#f0ece4;--mid:#8a8478;
+  --border:#2a2724;--border2:#363230;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;transition:background var(--t),color var(--t)}
+
+header{
+  position:sticky;top:0;z-index:100;background:var(--dark);
+  padding:0 clamp(1rem,4vw,2.5rem);height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo-name{font-size:1.15rem;color:#fff;font-weight:500}
+.logo-sub{font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:2px}
+.icon-btn{
+  width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.2);
+  background:transparent;color:rgba(255,255,255,.6);cursor:pointer;font-size:.95rem;
+  display:flex;align-items:center;justify-content:center;transition:all var(--t);
+}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+.hero{
+  background:var(--dark);color:#fff;
+  padding:2.5rem clamp(1rem,4vw,2.5rem) 2rem;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.hero-tag{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:.6rem}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,4vw,2.2rem);font-weight:400;line-height:1.2;margin-bottom:.5rem}
+.hero p{font-size:.85rem;color:rgba(255,255,255,.5);max-width:560px;line-height:1.6}
+.hero .updated{font-size:.75rem;color:rgba(255,255,255,.35);margin-top:1rem}
+
+.layout{
+  max-width:1000px;margin:0 auto;padding:2.5rem clamp(1rem,4vw,2.5rem) 5rem;
+  display:grid;grid-template-columns:220px 1fr;gap:2.5rem;align-items:start;
+}
+@media(max-width:760px){.layout{grid-template-columns:1fr}}
+
+nav.toc{
+  position:sticky;top:84px;background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r);padding:1.1rem 1.2rem;
+}
+@media(max-width:760px){nav.toc{position:static}}
+nav.toc .toc-title{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mid);font-weight:600;margin-bottom:.7rem}
+nav.toc a{
+  display:block;font-size:.8rem;color:var(--mid);text-decoration:none;
+  padding:.35rem 0;border-left:2px solid transparent;padding-left:.6rem;
+  transition:all var(--t);
+}
+nav.toc a:hover{color:var(--dark);border-left-color:var(--accent)}
+
+.content section{margin-bottom:2.2rem;scroll-margin-top:84px}
+.content h2{
+  font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:600;
+  margin-bottom:.75rem;padding-bottom:.6rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:.6rem;
+}
+.content h2 .num{
+  font-family:'Inter',sans-serif;font-size:.7rem;color:var(--accent2);
+  border:1px solid var(--border2);border-radius:50%;width:24px;height:24px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:600;
+}
+.content p{font-size:.86rem;line-height:1.75;color:var(--mid);margin-bottom:.85rem}
+.content p b, .content li b{color:var(--dark);font-weight:600}
+.content ul{margin:0 0 .85rem 0;padding-left:0;list-style:none}
+.content ul li{
+  font-size:.86rem;line-height:1.7;color:var(--mid);
+  padding-left:1.3rem;position:relative;margin-bottom:.5rem;
+}
+.content ul li::before{
+  content:'';position:absolute;left:0;top:.55rem;width:5px;height:5px;
+  border-radius:50%;background:var(--accent);
+}
+.info-card{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--r);
+  padding:1rem 1.2rem;margin-bottom:.85rem;
+}
+.info-card .label{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);font-weight:600;margin-bottom:.3rem}
+.info-card .value{font-size:.88rem;color:var(--dark)}
+.table-wrap{overflow-x:auto;margin-bottom:.85rem;border:1px solid var(--border);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th{
+  background:var(--white);text-align:left;padding:.65rem .9rem;
+  font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mid);
+  border-bottom:1px solid var(--border);font-weight:600;
+}
+td{padding:.7rem .9rem;border-bottom:1px solid var(--border);color:var(--mid);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.pill{
+  display:inline-block;font-size:.68rem;color:var(--accent2);background:rgba(200,169,110,.12);
+  border:1px solid rgba(200,169,110,.3);padding:2px 9px;border-radius:100px;font-weight:500;
+}
+.contact-box{
+  background:var(--dark);color:#fff;border-radius:var(--r);padding:1.5rem 1.6rem;margin-top:.5rem;
+}
+.contact-box p{color:rgba(255,255,255,.6)}
+.contact-box a{color:var(--accent);text-decoration:none;font-weight:500}
+.contact-box a:hover{text-decoration:underline}
+.back-top{
+  display:inline-flex;align-items:center;gap:.4rem;font-size:.75rem;color:var(--mid);
+  text-decoration:none;margin-top:.5rem;
+}
+.back-top:hover{color:var(--accent2)}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo-name">Luxury Shoes</div>
+    <div class="logo-sub">Política de privacidad</div>
+  </div>
+  <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Cambiar tema">🌙</button>
+</header>
+
+<div class="hero" id="top">
+  <div class="hero-tag">Documento legal</div>
+  <h1>Política de Privacidad</h1>
+  <p>Esta política explica qué información recopilamos cuando visitas nuestro catálogo y sitio web, cómo la usamos, con quién la compartimos y qué opciones tienes al respecto.</p>
+  <div class="updated">Última actualización: 7 de julio de 2026</div>
+</div>
+
+<div class="layout">
+
+  <nav class="toc">
+    <div class="toc-title">Contenido</div>
+    <a href="#quienes-somos">1. Quiénes somos</a>
+    <a href="#datos-que-recopilamos">2. Datos que recopilamos</a>
+    <a href="#como-usamos">3. Cómo usamos tus datos</a>
+    <a href="#cookies-analytics">4. Cookies y Google Analytics</a>
+    <a href="#con-quien-compartimos">5. Con quién compartimos</a>
+    <a href="#whatsapp-redes">6. WhatsApp, Instagram y Facebook</a>
+    <a href="#conservacion">7. Conservación de datos</a>
+    <a href="#tus-derechos">8. Tus derechos</a>
+    <a href="#menores">9. Menores de edad</a>
+    <a href="#seguridad">10. Seguridad</a>
+    <a href="#cambios">11. Cambios a esta política</a>
+    <a href="#contacto">12. Contacto</a>
+  </nav>
+
+  <div class="content">
+
+    <section id="quienes-somos">
+      <h2><span class="num">1</span>Quiénes somos</h2>
+      <p><b>Luxury Shoes</b> opera un catálogo en línea de calzado, accesible a través de esta web y compartido por redes sociales y WhatsApp. Somos responsables de los datos personales que se describen en esta política respecto al uso de nuestro catálogo y canales de contacto.</p>
+      <div class="info-card">
+        <div class="label">Sitio web del catálogo</div>
+        <div class="value">luxury-shoes-el-salvador.github.io/CATALOGO</div>
+      </div>
+    </section>
+
+    <section id="datos-que-recopilamos">
+      <h2><span class="num">2</span>Datos que recopilamos</h2>
+      <p>Recopilamos información de dos formas: automáticamente, cuando navegas el catálogo, y de forma directa, cuando decides contactarnos.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Tipo de dato</th><th>¿Cuándo se recopila?</th><th>Ejemplos</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="pill">Automático</span></td>
+              <td>Al visitar el catálogo</td>
+              <td>Páginas vistas, tiempo en el sitio, tipo de dispositivo, ubicación aproximada, origen del tráfico (vía Google Analytics)</td>
+            </tr>
+            <tr>
+              <td><span class="pill">Directo</span></td>
+              <td>Al escribirnos por WhatsApp, Instagram o Facebook</td>
+              <td>Nombre, número de teléfono o usuario de la red social, mensajes enviados, talla y modelo de interés</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p><b>No</b> recopilamos datos de pago, direcciones físicas ni documentos de identidad a través de este sitio web — cualquier acuerdo de compra, pago o entrega se coordina directamente por WhatsApp o redes sociales, fuera de esta web.</p>
+    </section>
+
+    <section id="como-usamos">
+      <h2><span class="num">3</span>Cómo usamos tus datos</h2>
+      <ul>
+        <li>Para mostrarte el catálogo de pares disponibles y sus tallas.</li>
+        <li>Para responder tus consultas sobre disponibilidad, tallas o precios.</li>
+        <li>Para coordinar la compra o reserva de un par cuando nos contactas.</li>
+        <li>Para entender qué modelos y páginas son más visitados, y así mejorar el catálogo (mediante Google Analytics).</li>
+        <li>Para detectar y prevenir problemas técnicos o uso indebido del sitio.</li>
+      </ul>
+      <p>No vendemos ni alquilamos tus datos personales a terceros con fines publicitarios.</p>
+    </section>
+
+    <section id="cookies-analytics">
+      <h2><span class="num">4</span>Cookies y Google Analytics</h2>
+      <p>Este sitio utiliza <b>Google Analytics</b> para entender cómo se usa el catálogo. Google Analytics coloca cookies en tu navegador que recopilan información como páginas visitadas, tiempo de permanencia y tipo de dispositivo, de forma agregada y generalmente anónima.</p>
+      <p>Puedes bloquear o eliminar estas cookies desde la configuración de tu navegador, o instalar el <a href="https://tools.google.com/dlpage/gaoptout" style="color:var(--accent2)">complemento de inhabilitación de Google Analytics</a>. Bloquear las cookies no afecta tu capacidad de ver el catálogo, solo la recolección de estadísticas de uso.</p>
+      <p>Para más información sobre cómo Google trata estos datos, puedes consultar la política de privacidad de Google.</p>
+    </section>
+
+    <section id="con-quien-compartimos">
+      <h2><span class="num">5</span>Con quién compartimos tus datos</h2>
+      <p>No compartimos tus datos personales con terceros para fines comerciales propios. Sí utilizamos ciertos servicios externos que, como parte de su funcionamiento normal, procesan datos en nuestro nombre:</p>
+      <ul>
+        <li><b>Google Analytics (Google LLC):</b> estadísticas de uso del sitio.</li>
+        <li><b>Google Drive / Google Sheets:</b> almacenamiento de las imágenes y el inventario del catálogo (no contiene datos de clientes).</li>
+        <li><b>WhatsApp Business (Meta):</b> gestión de conversaciones cuando nos escribes.</li>
+        <li><b>Instagram y Facebook (Meta):</b> mensajes y comentarios cuando nos contactas por esas plataformas.</li>
+        <li><b>GitHub Pages:</b> alojamiento técnico del sitio web.</li>
+      </ul>
+      <p>Cada uno de estos servicios tiene su propia política de privacidad, que rige el tratamiento de datos dentro de su plataforma.</p>
+    </section>
+
+    <section id="whatsapp-redes">
+      <h2><span class="num">6</span>WhatsApp, Instagram y Facebook</h2>
+      <p>Cuando nos contactas por <b>WhatsApp</b>, <b>Instagram</b> o <b>Facebook</b>, la conversación queda sujeta también a las políticas de privacidad de Meta, dueña de estas plataformas. Nosotros usamos la información que nos compartes en esos chats únicamente para atender tu consulta o coordinar tu compra.</p>
+      <p>No usamos tu número de teléfono ni tu usuario de redes sociales para enviarte publicidad no solicitada fuera del contexto de tu consulta.</p>
+    </section>
+
+    <section id="conservacion">
+      <h2><span class="num">7</span>Conservación de datos</h2>
+      <p>Conservamos las conversaciones de WhatsApp, Instagram y Facebook mientras sea razonablemente necesario para atender tu consulta, dar seguimiento a una compra o cumplir con fines administrativos o legales. Los datos estadísticos de Google Analytics se conservan según los plazos por defecto configurados por Google, ajustables desde nuestra cuenta de Analytics.</p>
+    </section>
+
+    <section id="tus-derechos">
+      <h2><span class="num">8</span>Tus derechos</h2>
+      <p>Puedes, en cualquier momento:</p>
+      <ul>
+        <li>Solicitar información sobre los datos que tenemos sobre ti (por ejemplo, tu historial de conversación).</li>
+        <li>Pedir que corrijamos datos inexactos.</li>
+        <li>Pedir que eliminemos tus datos de nuestras conversaciones, cuando ya no sean necesarios.</li>
+        <li>Oponerte al uso de cookies de Analytics desde tu navegador.</li>
+        <li>Dejar de seguirnos o bloquearnos en redes sociales para cortar el contacto directo.</li>
+      </ul>
+      <p>Para ejercer cualquiera de estos derechos, contáctanos por los medios indicados en la sección de contacto.</p>
+    </section>
+
+    <section id="menores">
+      <h2><span class="num">9</span>Menores de edad</h2>
+      <p>Nuestro catálogo y canales de venta están dirigidos a personas mayores de edad. No recopilamos intencionalmente datos de menores de edad. Si detectamos que un menor nos ha proporcionado datos personales sin el consentimiento de un adulto responsable, los eliminaremos.</p>
+    </section>
+
+    <section id="seguridad">
+      <h2><span class="num">10</span>Seguridad</h2>
+      <p>Tomamos medidas razonables para proteger la información que manejamos, como el uso de plataformas reconocidas (Google, Meta, GitHub) que cuentan con sus propias medidas de seguridad. Sin embargo, ningún medio de transmisión por internet es 100% seguro, por lo que no podemos garantizar seguridad absoluta.</p>
+    </section>
+
+    <section id="cambios">
+      <h2><span class="num">11</span>Cambios a esta política</h2>
+      <p>Podemos actualizar esta política de privacidad ocasionalmente para reflejar cambios en nuestras prácticas o por motivos legales. La fecha de "última actualización" al inicio de esta página indica la versión más reciente. Te recomendamos revisarla periódicamente.</p>
+    </section>
+
+    <section id="contacto">
+      <h2><span class="num">12</span>Contacto</h2>
+      <p>Si tienes preguntas sobre esta política de privacidad o sobre el tratamiento de tus datos, puedes contactarnos:</p>
+      <div class="contact-box">
+        <p style="margin-bottom:.4rem">📱 <b style="color:#fff">WhatsApp:</b> escríbenos desde el botón de contacto en el catálogo</p>
+        <p style="margin-bottom:0">📷 <b style="color:#fff">Instagram / Facebook:</b> Luxury Shoes El Salvador</p>
+      </div>
+      <a class="back-top" href="#top">↑ Volver arriba</a>
+    </section>
+
+  </div>
+</div>
+
+<script>
+function toggleTheme(){
+  const dark = document.body.classList.toggle('dark');
+  document.getElementById('theme-btn').textContent = dark ? '☀️' : '🌙';
+  localStorage.setItem('ls_privacy_theme', dark ? 'dark' : 'light');
+}
+(function initTheme(){
+  if(localStorage.getItem('ls_privacy_theme') === 'dark'){
+    document.body.classList.add('dark');
+    document.getElementById('theme-btn').textContent = '☀️';
+  }
+})();
+</script>
+
+</body>
+</html>

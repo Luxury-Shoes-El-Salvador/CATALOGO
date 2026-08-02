@@ -446,6 +446,7 @@ body.dark .size-overlay{box-shadow:0 4px 14px rgba(0,0,0,.5)}
 
 /* Card body */
 .card-body{padding:1rem 1.1rem 1.1rem;flex:1;display:flex;flex-direction:column;gap:.5rem}
+.card-model-row{display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem}
 .card-model{
   font-family:'Inter',sans-serif;font-size:.96rem;font-weight:600;
   line-height:1.25;color:var(--dark);
@@ -455,11 +456,41 @@ body.dark .size-overlay{box-shadow:0 4px 14px rgba(0,0,0,.5)}
   padding:3px 9px;background:var(--tag);border-radius:100px;
   font-size:.67rem;color:var(--tag-text);letter-spacing:.02em;font-weight:500;
 }
+.tienda-tag{
+  flex-shrink:0;padding:2px 9px;border-radius:100px;font-size:.6rem;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;
+}
+.tienda-luxury{background:var(--accent-light);color:var(--accent2)}
+.tienda-cadejito{background:rgba(90,87,80,.12);color:var(--mid)}
+.destacado-ribbon{
+  position:absolute;bottom:10px;left:10px;z-index:4;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  padding:3px 10px;border-radius:100px;font-size:.62rem;font-weight:700;
+  letter-spacing:.04em;box-shadow:0 2px 8px rgba(28,26,23,.25);
+}
+.card-price{
+  font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:600;
+  color:var(--accent2);white-space:nowrap;
+}
 .card-footer{
   display:flex;align-items:center;justify-content:space-between;
   margin-top:auto;padding-top:.6rem;border-top:1px solid var(--border);
   gap:.5rem;
 }
+
+/* Encabezado de grupo (mismo modelo+color, varios pares) */
+.group-header{
+  grid-column:1/-1;display:flex;align-items:baseline;gap:.6rem;
+  padding:1.4rem 0 .4rem;margin-top:.2rem;
+}
+.group-header-text{
+  font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--dark);
+}
+.group-header-count{
+  font-size:.68rem;color:var(--accent2);font-weight:600;
+  background:var(--accent-light);padding:2px 10px;border-radius:100px;
+}
+
 .price-block{display:flex;flex-direction:column;gap:1px}
 .old-price{text-decoration:line-through;color:var(--mid);font-size:.78em;opacity:.75}
 .discount-price{color:var(--accent2);font-weight:700;font-size:1.2rem;line-height:1}
@@ -598,6 +629,31 @@ body.dark .size-chip{background:rgba(255,255,255,.12);color:var(--dark)}
   display:flex;align-items:center;justify-content:center;gap:.35rem;
 }
 .wa-hint::before{content:'🔒';font-size:.75rem}
+
+.modal-id-badge{
+  display:none;align-items:center;gap:.3rem;margin-bottom:.6rem;
+  font-size:.64rem;letter-spacing:.06em;color:var(--accent2);
+  background:rgba(255,255,255,.5);border:1px solid rgba(200,169,110,.3);
+  padding:2px 9px;border-radius:100px;font-weight:700;width:fit-content;
+}
+body.dark .modal-id-badge{background:rgba(255,255,255,.06)}
+
+.share-btn{
+  display:flex;align-items:center;justify-content:center;gap:.5rem;
+  width:100%;margin-top:.65rem;padding:.7rem 1.2rem;
+  background:transparent;border:1.5px solid var(--border2);border-radius:12px;
+  color:var(--dark);font-family:'Inter',sans-serif;font-size:.85rem;font-weight:600;
+  cursor:pointer;transition:all var(--transition);
+}
+.share-btn:hover{background:var(--dark);color:#fff;border-color:var(--dark)}
+
+.share-toast{
+  position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--green);color:#fff;padding:.6rem 1.4rem;border-radius:100px;
+  font-size:.82rem;font-weight:500;z-index:999;transition:transform .3s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;white-space:nowrap;
+}
+.share-toast.show{transform:translateX(-50%) translateY(0)}
 
 /* Detail grid */
 .detail-section-title{
@@ -830,6 +886,18 @@ body.dark .size-chip{background:rgba(255,255,255,.12);color:var(--dark)}
     <label>Modelo</label>
     <select id="s-modelo" onchange="applyFilters()" aria-label="Filtrar por modelo"><option value="">Todos</option></select>
   </div>
+  <div class="fg">
+    <label>Marca</label>
+    <select id="s-marca" onchange="applyFilters()" aria-label="Filtrar por marca"><option value="">Todas</option></select>
+  </div>
+  <div class="fg">
+    <label>Tienda</label>
+    <select id="s-tienda" onchange="applyFilters()" aria-label="Filtrar por tienda">
+      <option value="">Todas</option>
+      <option value="LUXURY">Luxury Shoes</option>
+      <option value="CADEJITO">Cadejito Shoes</option>
+    </select>
+  </div>
   <input type="hidden" id="s-disp" value="DISPONIBLE">
   <button class="clear-btn" onclick="clearFilters()">Limpiar</button>
   <!-- Active filter chips -->
@@ -843,6 +911,7 @@ body.dark .size-chip{background:rgba(255,255,255,.12);color:var(--dark)}
     <label style="font-size:.68rem;color:var(--mid)">Ordenar:</label>
     <select id="s-sort" onchange="applyFilters()">
       <option value="">Por defecto</option>
+      <option value="destacados">Destacados primero</option>
       <option value="talla-asc">Talla: menor a mayor</option>
       <option value="talla-desc">Talla: mayor a menor</option>
     </select>
@@ -883,6 +952,8 @@ body.dark .size-chip{background:rgba(255,255,255,.12);color:var(--dark)}
           <div class="modal-views" id="m-views">👁 —</div>
           <div id="m-badge"></div>
         </div>
+        <div class="modal-price" id="m-price" style="display:none">—</div>
+        <div class="modal-id-badge" id="m-id-badge" style="display:none">ID: —</div>
         <a id="m-wa" href="#" target="_blank" rel="noopener" class="wa-btn">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
@@ -890,6 +961,7 @@ body.dark .size-chip{background:rgba(255,255,255,.12);color:var(--dark)}
           </svg>
           Consultar por WhatsApp
         </a>
+        <button class="share-btn" onclick="shareProductLink()">🔗 Copiar enlace de este par</button>
         <div class="wa-hint">Respuesta rápida · Atención personalizada</div>
       </div>
 
@@ -913,6 +985,18 @@ body.dark .size-chip{background:rgba(255,255,255,.12);color:var(--dark)}
   <img id="zoom-img" src="" alt="Vista ampliada">
 </div>
 
+<!-- ═══ SHARE TOAST ═══ -->
+<div class="share-toast" id="share-toast">Enlace copiado</div>
+
+<!-- ═══ BOTÓN FLOTANTE DE WHATSAPP ═══ -->
+<a class="float-wa" id="float-wa" href="#" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
+  <span class="float-wa-tooltip">¿Buscas algo en especial? Escríbenos</span>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.127 1.532 5.864L.057 23.882a.5.5 0 00.614.63l6.208-1.631A11.93 11.93 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.878 9.878 0 01-5.031-1.378l-.36-.214-3.733.981.998-3.648-.235-.374A9.861 9.861 0 012.106 12C2.106 6.533 6.533 2.106 12 2.106S21.894 6.533 21.894 12 17.467 21.894 12 21.894z"/>
+  </svg>
+</a>
+
 <script>
 'use strict';
 
@@ -923,6 +1007,7 @@ const CONFIG = {
   csvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS7e_IekI9tZJaDGPWd8xw1wFUOpFSiQZOk-AWZwfPTmrG-PgVbXFaSxujXln8PAQqx275piuJaLLCm/pub?gid=1069283032&single=true&output=csv',
   waNumber: '50361642624',
   cacheTTL: 5 * 60 * 1000,
+  showPrices: true, // true = mostrar precio en tarjeta/modal · false = ocultarlo (fuerza a escribir por WhatsApp)
   cols: {
     tallaUSA:   'TALLA EN USA',
     tallaCM:    'TALLA EN CM',
@@ -932,6 +1017,11 @@ const CONFIG = {
     suela:      'SUELA',
     disp:       'ESTADO',
     ubicacion:  'UBICACIÓN FOTOGRAFICA',
+    id:         'ID',
+    marca:      'MARCA',
+    propiedad:  'PROPIEDAD',
+    color:      'COLOR',
+    destacado:  'DESTACADO',
     img1:'IMAGEN 1', img2:'IMAGEN 2', img3:'IMAGEN 3', img4:'IMAGEN 4',
     imgFallback1:'URL MODIFICADA', imgFallback2:'IMAGEN',
   }
@@ -944,10 +1034,19 @@ let allItems = [];
 let filtered  = [];
 let carIdx    = 0;
 let carIds    = [];
+let currentModalItem = null;
 
 /* ══════════════════════════════════════════
    PARTICLES
 ══════════════════════════════════════════ */
+if(CONFIG.showPrices){
+  const sortSel = document.getElementById('s-sort');
+  sortSel.insertAdjacentHTML('beforeend', `
+    <option value="precio-asc">Precio: menor a mayor</option>
+    <option value="precio-desc">Precio: mayor a menor</option>
+  `);
+}
+
 (function initParticles(){
   const c = document.getElementById('particles');
   if(!c) return;
@@ -1030,6 +1129,11 @@ function thumbUrl(id,size=400){
 ══════════════════════════════════════════ */
 function cv(v){const t=(v||'').trim();return t==='​'?'':t;}
 function cleanPrice(p){const n=parseFloat((p||'').replace(/[$,\s]/g,''));return isNaN(n)?null:n;}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function priceLabel(item){
+  const p = item.precio ?? item.precioEst;
+  return p!=null ? `$${p.toFixed(0)}` : '';
+}
 
 /* ══════════════════════════════════════════
    LOAD & MAP
@@ -1068,6 +1172,7 @@ async function loadData(){
         addId(r[C.img3]); addId(r[C.img4]);
         if(!imgIds.length){addId(r[C.imgFallback1]);addId(r[C.imgFallback2]);}
         return {
+          id:       cv(r[C.id]),
           talla:    cv(r[C.tallaUSA]),
           cm:       cv(r[C.tallaCM]),
           precio:   cleanPrice(r[C.precioFinal]),
@@ -1076,9 +1181,28 @@ async function loadData(){
           suela:    cv(r[C.suela]),
           disp:     cv(r[C.disp]).toUpperCase(),
           ubicacion:cv(r[C.ubicacion]),
+          marca:    cv(r[C.marca]),
+          propiedad:cv(r[C.propiedad]).toUpperCase(),
+          color:    cv(r[C.color]),
+          destacado:parseInt(cv(r[C.destacado]))||0,
           imgIds,
         };
-      });
+      })
+      // Orden base: agrupa visualmente por modelo+color+talla en vez del orden crudo del Sheet
+      .sort((a,b)=>
+        a.modelo.localeCompare(b.modelo) ||
+        a.color.localeCompare(b.color) ||
+        parseFloat(a.talla)-parseFloat(b.talla)
+      );
+
+    // Clave de grupo (modelo+color) para saber cuántos pares hermanos tiene cada uno
+    const groupCounts = {};
+    allItems.forEach(i=>{
+      const k = i.modelo+'||'+i.color;
+      i.groupKey = k;
+      groupCounts[k] = (groupCounts[k]||0)+1;
+    });
+    allItems.forEach(i=>{ i.groupSize = groupCounts[i.groupKey]; });
 
     // Update hero count
     const dispCount = allItems.filter(i=>i.disp==='DISPONIBLE').length;
@@ -1099,7 +1223,7 @@ async function loadData(){
     document.getElementById('stats-bar').style.display = 'flex';
 
     if(urlPar){
-      const idx = filtered.findIndex(it => it.imgIds[0] === urlPar);
+      const idx = filtered.findIndex(it => it.id === urlPar || it.imgIds[0] === urlPar);
       if(idx > -1){
         openModal(idx);
       } else {
@@ -1171,10 +1295,20 @@ function populateFilters(){
   const cms     =[...new Set(allItems.map(i=>i.cm).filter(Boolean))].sort((a,b)=>parseFloat(a)-parseFloat(b));
   const modelos =[...new Set(allItems.map(i=>i.modelo).filter(Boolean))].sort();
   const suelas  =[...new Set(allItems.map(i=>i.suela).filter(Boolean))].sort();
+  const marcas  =[...new Set(allItems.map(i=>i.marca).filter(Boolean))].sort();
+  const tiendas =[...new Set(allItems.map(i=>i.propiedad).filter(Boolean))].sort();
   fill('s-talla',tallas,'Todas');
   fill('s-cm',cms,'Todas');
   fill('s-modelo',modelos,'Todos');
   fill('s-suela',suelas,'Todas');
+  fill('s-marca',marcas,'Todas');
+  // Tienda: etiquetas amigables en vez del valor crudo del Sheet
+  const tSel = document.getElementById('s-tienda');
+  const tCur = tSel.value;
+  tSel.innerHTML = '<option value="">Todas</option>' + tiendas.map(t=>
+    `<option value="${t}">${t==='LUXURY'?'Luxury Shoes':t==='CADEJITO'?'Cadejito Shoes':t}</option>`
+  ).join('');
+  if(tiendas.includes(tCur)) tSel.value = tCur;
 }
 
 function applyFilters(){
@@ -1183,15 +1317,17 @@ function applyFilters(){
   const cm    =document.getElementById('s-cm').value;
   const modelo=document.getElementById('s-modelo').value;
   const suela =document.getElementById('s-suela').value;
+  const marca =document.getElementById('s-marca').value;
+  const tienda=document.getElementById('s-tienda').value;
   const disp  =document.getElementById('s-disp').value;
   const sort  =document.getElementById('s-sort').value;
 
-  ['s-talla','s-cm','s-modelo','s-suela'].forEach(id=>{
+  ['s-talla','s-cm','s-modelo','s-suela','s-marca','s-tienda'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.classList.toggle('filter-active',el.value!=='');
   });
 
-  updateActiveChips({search,talla,cm,modelo,suela});
+  updateActiveChips({search,talla,cm,modelo,suela,marca,tienda});
 
   filtered=allItems.filter(i=>{
     if(disp   && i.disp!==disp)     return false;
@@ -1199,17 +1335,21 @@ function applyFilters(){
     if(cm     && i.cm!==cm)         return false;
     if(modelo && i.modelo!==modelo) return false;
     if(suela  && i.suela!==suela)   return false;
+    if(marca  && i.marca!==marca)   return false;
+    if(tienda && i.propiedad!==tienda) return false;
     if(search){
-      const hay=`${i.modelo} ${i.talla} ${i.cm} ${i.suela} ${i.ubicacion}`.toLowerCase();
+      const hay=`${i.modelo} ${i.talla} ${i.cm} ${i.suela} ${i.ubicacion} ${i.marca} ${i.color}`.toLowerCase();
       if(!hay.includes(search)) return false;
     }
     return true;
   });
 
-  if(sort==='precio-asc')  filtered.sort((a,b)=>(a.precio||9999)-(b.precio||9999));
-  if(sort==='precio-desc') filtered.sort((a,b)=>(b.precio||0)-(a.precio||0));
-  if(sort==='talla-asc')   filtered.sort((a,b)=>parseFloat(a.talla)-parseFloat(b.talla));
-  if(sort==='talla-desc')  filtered.sort((a,b)=>parseFloat(b.talla)-parseFloat(a.talla));
+  if(sort==='precio-asc')    filtered.sort((a,b)=>(a.precio||9999)-(b.precio||9999));
+  if(sort==='precio-desc')   filtered.sort((a,b)=>(b.precio||0)-(a.precio||0));
+  if(sort==='talla-asc')     filtered.sort((a,b)=>parseFloat(a.talla)-parseFloat(b.talla));
+  if(sort==='talla-desc')    filtered.sort((a,b)=>parseFloat(b.talla)-parseFloat(a.talla));
+  if(sort==='destacados')    filtered.sort((a,b)=>b.destacado-a.destacado);
+  // Sin orden explícito: ya vienen agrupados por modelo+color+talla desde loadData
 
   renderGrid();
   updateStats();
@@ -1224,6 +1364,8 @@ function updateActiveChips(f){
   if(f.cm)     chips.push({label:`${f.cm} cm`,clear:()=>{document.getElementById('s-cm').value='';applyFilters();}});
   if(f.modelo) chips.push({label:f.modelo,clear:()=>{document.getElementById('s-modelo').value='';applyFilters();}});
   if(f.suela)  chips.push({label:f.suela,clear:()=>{document.getElementById('s-suela').value='';applyFilters();}});
+  if(f.marca)  chips.push({label:f.marca,clear:()=>{document.getElementById('s-marca').value='';applyFilters();}});
+  if(f.tienda) chips.push({label:f.tienda==='LUXURY'?'Luxury Shoes':'Cadejito Shoes',clear:()=>{document.getElementById('s-tienda').value='';applyFilters();}});
   if(!chips.length){wrap.classList.remove('visible');wrap.innerHTML='';return;}
   wrap.classList.add('visible');
   wrap.innerHTML=chips.map((_,i)=>`<button class="chip" data-chip="${i}"><span>${chips[i].label}</span><span class="chip-x">×</span></button>`).join('');
@@ -1233,7 +1375,7 @@ function updateActiveChips(f){
 }
 
 function clearFilters(){
-  ['s-search','s-talla','s-cm','s-suela','s-sort'].forEach(id=>{
+  ['s-search','s-talla','s-cm','s-suela','s-marca','s-tienda','s-sort'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.value='';
   });
@@ -1261,32 +1403,59 @@ function renderGrid(){
     </div>`;
     return;
   }
-  el.innerHTML=filtered.map((item,i)=>buildCard(item,i)).join('');
+
+  // Encabezados de grupo (modelo+color) solo tienen sentido con el orden base,
+  // porque es el único orden donde los pares hermanos quedan adyacentes.
+  const showGroups = document.getElementById('s-sort').value === '';
+  let html = '';
+  if(showGroups){
+    let i = 0;
+    while(i < filtered.length){
+      let j = i;
+      while(j < filtered.length && filtered[j].groupKey === filtered[i].groupKey) j++;
+      const runLen = j - i;
+      if(runLen > 1){
+        const first = filtered[i];
+        html += `<div class="group-header">
+          <span class="group-header-text">${esc(first.modelo)}${first.color?' · '+esc(first.color):''}</span>
+          <span class="group-header-count">${runLen} pares</span>
+        </div>`;
+      }
+      for(let k=i;k<j;k++) html += buildCard(filtered[k], k);
+      i = j;
+    }
+  } else {
+    html = filtered.map((item,i)=>buildCard(item,i)).join('');
+  }
+
+  el.innerHTML = html;
   loadCardViewCounts();
 }
 
 function badgeHtml(disp){
-  if(disp==='DISPONIBLE') return `<span class="status-badge badge-disponible">Disponible</span>`;
+  if(disp==='DISPONIBLE') return `<span class="status-badge badge-disponible">Última unidad</span>`;
   if(disp==='VENDIDO')    return `<span class="status-badge badge-vendido">Vendido</span>`;
-  if(disp)                return `<span class="status-badge badge-otro">${disp}</span>`;
+  if(disp)                return `<span class="status-badge badge-otro">${esc(disp)}</span>`;
   return '';
 }
 
 function buildCard(item, idx){
   const hasImgs = item.imgIds.length > 0;
   const n       = item.imgIds.length;
-  const tags    = [item.suela, item.cm ? item.cm+' cm' : ''].filter(Boolean);
-
+  const tags    = [item.suela, item.cm ? item.cm+' cm' : '', item.color].filter(Boolean);
 
   const imgs = hasImgs
     ? item.imgIds.map((id,di)=>
-        `<img src="${thumbUrl(id)}" class="${di===0?'active':''}" alt="${item.modelo}" loading="lazy" onerror="this.style.display='none'">`
+        `<img src="${thumbUrl(id)}" class="${di===0?'active':''}" alt="${esc(item.modelo)}" loading="lazy" onerror="this.style.display='none'">`
       ).join('')
     : `<div class="no-img-card"><svg width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>Sin foto</span></div>`;
 
   const dots   = n>1?`<div class="gallery-dots">${item.imgIds.map((_,di)=>`<button class="gdot${di===0?' active':''}" onclick="setImg(event,${idx},${di})" aria-label="Foto ${di+1}"></button>`).join('')}</div>`:'';
   const arrows = n>1?`<button class="garrow prev" onclick="prevImg(event,${idx})" aria-label="Anterior">‹</button><button class="garrow next" onclick="nextImg(event,${idx})" aria-label="Siguiente">›</button>`:'';
   const photoCount = n>1?`<span class="photo-count">📷 ${n}</span>`:'';
+  const destacadoHtml = item.destacado>=5 ? `<span class="destacado-ribbon">★ Destacado</span>` : '';
+  const tiendaTag = item.propiedad ? `<span class="tienda-tag tienda-${item.propiedad.toLowerCase()}">${item.propiedad==='LUXURY'?'Luxury':item.propiedad==='CADEJITO'?'Cadejito':esc(item.propiedad)}</span>` : '';
+  const priceHtml = (CONFIG.showPrices && priceLabel(item)) ? `<div class="card-price">${priceLabel(item)}</div>` : '';
 
   const vk = viewKey(item);
   const viewsHtml = `<span class="card-views" id="vb-${vk}">👁 …</span>`;
@@ -1300,20 +1469,25 @@ function buildCard(item, idx){
 
   return `
   <article class="card" data-idx="${idx}" id="card-${idx}" role="listitem" tabindex="0"
-    aria-label="${item.modelo}, talla ${item.talla}"
+    aria-label="${esc(item.modelo)}, talla ${esc(item.talla)}"
     style="animation-delay:${Math.min(idx*.06,.4)}s">
     <div class="card-gallery">
       ${imgs}
-      <div class="size-overlay"><span class="size-label">Talla</span><span class="size-num">${item.talla}</span></div>
+      <div class="size-overlay"><span class="size-label">Talla</span><span class="size-num">${esc(item.talla)}</span></div>
+      ${destacadoHtml}
       ${favBtnHtml}
       ${badgeHtml(item.disp)}
       ${dots}${arrows}${photoCount}
     </div>
     <div class="card-body">
-      <div class="card-model">${item.modelo}</div>
-      ${tags.length?`<div class="card-tags">${tags.map(t=>`<span class="ctag">${t}</span>`).join('')}</div>`:''}
+      <div class="card-model-row">
+        <div class="card-model">${esc(item.modelo)}</div>
+        ${tiendaTag}
+      </div>
+      ${tags.length?`<div class="card-tags">${tags.map(t=>`<span class="ctag">${esc(t)}</span>`).join('')}</div>`:''}
       <div class="card-footer">
         ${viewsHtml}
+        ${priceHtml}
       </div>
     </div>
   </article>`;
@@ -1361,6 +1535,7 @@ document.getElementById('catalog').addEventListener('keydown',e=>{
 function openModal(idx){
   const item=filtered[idx];
   if(!item) return;
+  currentModalItem = item;
 
   document.getElementById('m-title').textContent = item.modelo;
   const sub = document.getElementById('m-sub');
@@ -1368,6 +1543,23 @@ function openModal(idx){
   sub.style.display = item.ubicacion ? '' : 'none';
 
   document.getElementById('m-badge').innerHTML = badgeHtml(item.disp);
+
+  const idBadge = document.getElementById('m-id-badge');
+  if(item.id){
+    idBadge.textContent = `ID: ${item.id}`;
+    idBadge.style.display = 'inline-flex';
+  } else {
+    idBadge.style.display = 'none';
+  }
+
+  const priceEl = document.getElementById('m-price');
+  const label = priceLabel(item);
+  if(CONFIG.showPrices && label){
+    priceEl.textContent = label;
+    priceEl.style.display = '';
+  } else {
+    priceEl.style.display = 'none';
+  }
 
   // Registrar y mostrar la vista de este zapato
   const mViews = document.getElementById('m-views');
@@ -1384,22 +1576,49 @@ function openModal(idx){
   const msg = encodeURIComponent(
     `Hola! Me interesa este zapato 👟\n`+
     `Modelo: ${item.modelo}\n`+
+    (item.id?`ID: ${item.id}\n`:'')+
     `Talla: ${item.talla} USA${item.cm?' ('+item.cm+' cm)':''}\n`+
     `Suela: ${item.suela||'—'}\n`+
+    (CONFIG.showPrices && label?`Precio: ${label}\n`:'')+
     (imgUrl?`Foto: ${imgUrl}`:'')
   );
   document.getElementById('m-wa').href = `https://wa.me/${CONFIG.waNumber}?text=${msg}`;
 
   document.getElementById('m-details').innerHTML = `
-    <div class="di"><label>Talla USA</label><span>${item.talla}</span></div>
-    <div class="di"><label>Talla CM</label><span>${item.cm||'—'}</span></div>
-    <div class="di"><label>Suela</label><span>${item.suela||'—'}</span></div>
-    <div class="di"><label>Disponibilidad</label><span>${item.disp||'—'}</span></div>
+    <div class="di"><label>Talla USA</label><span>${esc(item.talla)}</span></div>
+    <div class="di"><label>Talla CM</label><span>${esc(item.cm||'—')}</span></div>
+    <div class="di"><label>Color</label><span>${esc(item.color||'—')}</span></div>
+    <div class="di"><label>Suela</label><span>${esc(item.suela||'—')}</span></div>
+    <div class="di"><label>Marca</label><span>${esc(item.marca||'—')}</span></div>
+    <div class="di"><label>Disponibilidad</label><span>${item.disp==='DISPONIBLE'?'Última unidad':esc(item.disp||'—')}</span></div>
   `;
 
   document.getElementById('modal').classList.add('open');
   document.body.style.overflow='hidden';
   document.getElementById('modal-box').scrollTop=0;
+}
+
+function buildShareUrl(id){
+  const url = new URL(location.origin + location.pathname);
+  url.searchParams.set('par', id);
+  return url.toString();
+}
+
+function shareProductLink(){
+  const item = currentModalItem;
+  if(!item || !item.id) return;
+  const url = buildShareUrl(item.id);
+  const done = () => {
+    const t = document.getElementById('share-toast');
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  };
+  navigator.clipboard.writeText(url).then(done).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=url; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    done();
+  });
 }
 
 function closeModal(){
@@ -1532,7 +1751,7 @@ document.addEventListener('keydown',e=>{
 const VIEWS_NS = 'luxuryshoes-sv-a1f9';
 
 function viewKey(item){
-  const raw = `${item.modelo}-${item.talla}`;
+  const raw = item.id ? item.id : `${item.modelo}-${item.talla}`;
   return VIEWS_NS + '-' + raw
     .toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // quitar acentos
@@ -1603,8 +1822,7 @@ function saveFavs(set){
   localStorage.setItem(FAV_KEY, JSON.stringify([...set]));
 }
 function favKey(item){
-  // Unique key per item: modelo + talla
-  return `${item.modelo}||${item.talla}`;
+  return item.id ? `id:${item.id}` : `${item.modelo}||${item.talla}`;
 }
 
 function toggleFav(e, idx){
@@ -1729,6 +1947,9 @@ function toggleTheme(){
 /* ══════════════════════════════════════════
    INIT
 ══════════════════════════════════════════ */
+const floatWaMsg = encodeURIComponent('Hola! Estoy viendo el catálogo de Luxury Shoes 👟 y quisiera más información.');
+document.getElementById('float-wa').href = `https://wa.me/${CONFIG.waNumber}?text=${floatWaMsg}`;
+
 loadData();
 updateFavBadge();
 </script>

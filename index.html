@@ -807,7 +807,7 @@ body.dark .modal-id-badge{background:rgba(255,255,255,.06)}
 <!-- ═══ HEADER ═══ -->
 <header>
   <div class="logo-group">
-    <a href="index.html" class="back-btn" aria-label="Volver">&#8592;</a>
+    <a href="index.html" class="back-btn" id="back-btn" aria-label="Volver">&#8592;</a>
     <div class="logo-text">
       <div class="logo-name">Luxury <span>Shoes</span></div>
       <div class="logo-brand" id="header-marca">El Salvador</div>
@@ -1130,6 +1130,7 @@ function thumbUrl(id,size=400){
 function cv(v){const t=(v||'').trim();return t==='​'?'':t;}
 function cleanPrice(p){const n=parseFloat((p||'').replace(/[$,\s]/g,''));return isNaN(n)?null:n;}
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function isNegro(color){ return (color||'').trim().toUpperCase()==='NEGRO'; }
 function priceLabel(item){
   const p = item.precio ?? item.precioEst;
   return p!=null ? `$${p.toFixed(0)}` : '';
@@ -1253,6 +1254,8 @@ const urlTallaCM  = params.get('talla_cm')||'';
 const urlSuela    = params.get('suela')||'';
 const urlModelo   = params.get('modelo')||'';
 const urlPar      = params.get('par')||'';
+const urlCatMarca = params.get('cat_marca')||'';   // desde categorias.html: marca real (SKECHERS, HOKA...)
+let   urlCatColor = params.get('cat_color')||'';    // desde categorias.html: 'negro' | 'colores'
 
 if(urlMarca){
   document.getElementById('header-marca').textContent = urlMarca;
@@ -1276,6 +1279,18 @@ function setInitialFilterParams(){
     mSel.value=urlMarca;
     const fg=document.getElementById('fg-modelo');
     if(fg) fg.style.display='none';
+  }
+  if(urlCatMarca){
+    const brSel = document.getElementById('s-marca');
+    brSel.value = urlCatMarca;
+    brSel.classList.add('filter-active');
+    let label = urlCatMarca.charAt(0) + urlCatMarca.slice(1).toLowerCase();
+    if(urlCatColor==='negro')   label += ' Negros';
+    if(urlCatColor==='colores') label += ' Colores';
+    document.getElementById('header-marca').textContent = label;
+    document.title = `Luxury Shoes · ${label}`;
+    const back = document.getElementById('back-btn');
+    if(back) back.href = 'categorias.html';
   }
 }
 
@@ -1337,6 +1352,8 @@ function applyFilters(){
     if(suela  && i.suela!==suela)   return false;
     if(marca  && i.marca!==marca)   return false;
     if(tienda && i.propiedad!==tienda) return false;
+    if(urlCatColor==='negro'   && !isNegro(i.color))  return false;
+    if(urlCatColor==='colores' && isNegro(i.color))   return false;
     if(search){
       const hay=`${i.modelo} ${i.talla} ${i.cm} ${i.suela} ${i.ubicacion} ${i.marca} ${i.color}`.toLowerCase();
       if(!hay.includes(search)) return false;
@@ -1366,6 +1383,7 @@ function updateActiveChips(f){
   if(f.suela)  chips.push({label:f.suela,clear:()=>{document.getElementById('s-suela').value='';applyFilters();}});
   if(f.marca)  chips.push({label:f.marca,clear:()=>{document.getElementById('s-marca').value='';applyFilters();}});
   if(f.tienda) chips.push({label:f.tienda==='LUXURY'?'Luxury Shoes':'Cadejito Shoes',clear:()=>{document.getElementById('s-tienda').value='';applyFilters();}});
+  if(urlCatColor) chips.push({label:urlCatColor==='negro'?'Negros':'Colores',clear:()=>{urlCatColor='';applyFilters();}});
   if(!chips.length){wrap.classList.remove('visible');wrap.innerHTML='';return;}
   wrap.classList.add('visible');
   wrap.innerHTML=chips.map((_,i)=>`<button class="chip" data-chip="${i}"><span>${chips[i].label}</span><span class="chip-x">×</span></button>`).join('');
@@ -1379,6 +1397,7 @@ function clearFilters(){
     const el=document.getElementById(id);
     if(el) el.value='';
   });
+  urlCatColor='';
   if(!urlMarca){const el=document.getElementById('s-modelo');if(el) el.value='';}
   applyFilters();
 }

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Luxury Shoes · Categorías</title>
+<meta name="description" content="Explora nuestro catálogo por marca: Skechers, Hoka, On Cloud, Tredsafe y más. 100% original, importado directamente.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#faf8f4;--white:#ffffff;--dark:#1c1a17;--mid:#5a5750;
+  --border:#e8e3db;--accent:#c8a96e;--accent2:#b8894e;--accent-light:rgba(200,169,110,.14);
+  --shadow-sm:0 2px 10px rgba(28,26,23,.06);--shadow-md:0 14px 40px rgba(28,26,23,.14);
+  --t:.25s cubic-bezier(.4,0,.2,1);
+}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh}
+::selection{background:var(--accent-light)}
+a{color:inherit;text-decoration:none}
+
+/* ═══ HEADER ═══ */
+header{
+  padding:2.4rem clamp(1.2rem,5vw,3rem) 1.6rem;text-align:center;
+}
+.logo-name{font-family:'Playfair Display',serif;font-size:1.9rem;letter-spacing:.01em}
+.logo-name span{color:var(--accent2)}
+.tagline{color:var(--mid);font-size:.85rem;margin-top:.4rem;font-style:italic}
+.header-links{margin-top:1rem;display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap}
+.header-links a{
+  font-size:.78rem;font-weight:600;color:var(--accent2);
+  padding:.4rem .9rem;border:1px solid var(--accent-light);border-radius:100px;
+  transition:all var(--t);
+}
+.header-links a:hover{background:var(--accent-light)}
+
+/* ═══ GRID ═══ */
+.wrap{max-width:1200px;margin:0 auto;padding:0 clamp(1.2rem,5vw,3rem) 4rem}
+.grid{
+  display:grid;gap:1.3rem;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+}
+.cat-card{
+  position:relative;background:var(--white);border:1px solid var(--border);border-radius:18px;
+  overflow:hidden;box-shadow:var(--shadow-sm);transition:transform var(--t),box-shadow var(--t);
+  display:flex;flex-direction:column;
+}
+.cat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.cat-img-wrap{position:relative;aspect-ratio:4/3;background:var(--cream);overflow:hidden}
+.cat-img-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+.cat-card:hover .cat-img-wrap img{transform:scale(1.06)}
+.cat-count{
+  position:absolute;top:10px;right:10px;background:rgba(28,26,23,.78);color:#fff;
+  padding:4px 11px;border-radius:100px;font-size:.66rem;font-weight:600;letter-spacing:.03em;
+  backdrop-filter:blur(4px);
+}
+.cat-body{padding:1rem 1.2rem 1.2rem}
+.cat-name{font-family:'Playfair Display',serif;font-size:1.15rem;margin-bottom:.15rem}
+.cat-sub{font-size:.74rem;color:var(--mid)}
+.cat-arrow{
+  position:absolute;bottom:1.2rem;right:1.2rem;width:34px;height:34px;border-radius:50%;
+  background:var(--dark);color:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:1rem;transition:transform var(--t);
+}
+.cat-card:hover .cat-arrow{transform:translateX(3px)}
+
+.no-img{display:flex;align-items:center;justify-content:center;height:100%;color:var(--mid)}
+
+/* ═══ ALL-CATALOG BANNER ═══ */
+.all-banner{
+  grid-column:1/-1;background:linear-gradient(135deg,var(--dark),#2a2620);color:#fff;
+  border-radius:18px;padding:1.6rem 1.8rem;display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap;
+}
+.all-banner h3{font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:.2rem}
+.all-banner p{font-size:.8rem;color:rgba(255,255,255,.65)}
+.all-banner-btn{
+  background:var(--accent);color:var(--dark);padding:.65rem 1.3rem;border-radius:100px;
+  font-size:.82rem;font-weight:700;white-space:nowrap;transition:opacity var(--t);
+}
+.all-banner-btn:hover{opacity:.85}
+
+/* ═══ STATES ═══ */
+.state{grid-column:1/-1;text-align:center;padding:3rem 1rem;color:var(--mid)}
+.skeleton{background:var(--white);border:1px solid var(--border);border-radius:18px;overflow:hidden}
+.skeleton .cat-img-wrap{background:linear-gradient(90deg,var(--cream) 25%,#f0ece3 37%,var(--cream) 63%);background-size:400% 100%;animation:shimmer 1.4s infinite}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+
+@media(max-width:480px){
+  .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .cat-name{font-size:1rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-name">Luxury <span>Shoes</span></div>
+  <div class="tagline">100% original · Importado directamente · El Salvador</div>
+  <div class="header-links">
+    <a href="index.html">Ver catálogo completo</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════ */
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS7e_IekI9tZJaDGPWd8xw1wFUOpFSiQZOk-AWZwfPTmrG-PgVbXFaSxujXln8PAQqx275piuJaLLCm/pub?gid=1069283032&single=true&output=csv';
+const CATALOG_URL = 'index.html';
+const MIN_MARCA_COUNT = 2;   // marcas con menos pares disponibles van a "Otras marcas"
+const SPLIT_MIN       = 3;   // mínimo de pares en cada grupo (negro/colores) para dividir la marca
+
+const COLS = {
+  estado: 'ESTADO', marca: 'MARCA', color: 'COLOR',
+  img1:'IMAGEN 1', img2:'IMAGEN 2', img3:'IMAGEN 3', img4:'IMAGEN 4',
+  imgFallback1:'URL MODIFICADA', imgFallback2:'IMAGEN',
+};
+
+/* ══════════════════════════════════════════
+   CSV PARSING (idéntico al catálogo principal)
+══════════════════════════════════════════ */
+function parseCSV(text){
+  const rows=[]; let row=[]; let field=''; let inQuotes=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i], next=text[i+1];
+    if(inQuotes){
+      if(c==='"'&&next==='"'){field+='"';i++;}
+      else if(c==='"'){inQuotes=false;}
+      else field+=c;
+    }else{
+      if(c==='"')inQuotes=true;
+      else if(c===','){row.push(field);field='';}
+      else if(c==='\r'){}
+      else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}
+      else field+=c;
+    }
+  }
+  if(field.length||row.length){row.push(field);rows.push(row);}
+  if(!rows.length) return [];
+  const headers=rows[0];
+  return rows.slice(1).filter(r=>r.some(c=>c&&c.trim())).map(r=>{
+    const obj={}; headers.forEach((h,i)=>obj[h]=r[i]||''); return obj;
+  });
+}
+function cv(v){const t=(v||'').trim();return t==='​'?'':t;}
+function driveId(url){
+  if(!url) return null;
+  const m = url.match(/[?&]id=([^&\s]+)/) || url.match(/\/d\/([^/?#\s]+)/) || url.match(/open\?id=([^&\s]+)/);
+  return m ? m[1].trim() : null;
+}
+function isNegro(color){ return (color||'').trim().toUpperCase()==='NEGRO'; }
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function titleCase(s){ return s.charAt(0)+s.slice(1).toLowerCase(); }
+
+/* ══════════════════════════════════════════
+   CARGA Y AGRUPACIÓN
+══════════════════════════════════════════ */
+async function loadCategories(){
+  const grid = document.getElementById('grid');
+  try{
+    const res  = await fetch(CSV_URL);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const text = await res.text();
+    const rows = parseCSV(text);
+
+    // Solo pares DISPONIBLES cuentan para armar categorías
+    const disp = rows.filter(r => cv(r[COLS.estado]).toUpperCase()==='DISPONIBLE');
+
+    // Agrupar por marca real
+    const byMarca = {};
+    const categorias = [];
+    const otras = [];
+    disp.forEach(r=>{
+      const marca = cv(r[COLS.marca]).toUpperCase();
+      if(!marca){ otras.push(r); return; } // sin marca -> cuenta en "Otras marcas", enlaza al catálogo completo
+      if(!byMarca[marca]) byMarca[marca] = [];
+      byMarca[marca].push(r);
+    });
+
+    Object.entries(byMarca).forEach(([marca, items])=>{
+      if(items.length < MIN_MARCA_COUNT){ otras.push(...items); return; }
+
+      const negros  = items.filter(r=>isNegro(cv(r[COLS.color])));
+      const colores = items.filter(r=>!isNegro(cv(r[COLS.color])));
+
+      if(negros.length>=SPLIT_MIN && colores.length>=SPLIT_MIN){
+        categorias.push({ marca, label: titleCase(marca)+' Negros', colorGroup:'negro',   items: negros,  count: negros.length });
+        categorias.push({ marca, label: titleCase(marca)+' Colores', colorGroup:'colores', items: colores, count: colores.length });
+      }else{
+        categorias.push({ marca, label: titleCase(marca), colorGroup:'', items, count: items.length });
+      }
+    });
+
+    if(otras.length){
+      categorias.push({ marca:'', label:'Otras marcas', colorGroup:'', items: otras, count: otras.length, isOther:true });
+    }
+
+    // Marcas con más inventario primero
+    categorias.sort((a,b)=>b.count-a.count);
+
+    render(categorias);
+  }catch(err){
+    grid.innerHTML = `<div class="state">
+      No se pudo cargar el catálogo: ${esc(err.message)}<br>
+      <a href="${CATALOG_URL}" style="color:var(--accent2);font-weight:600">Ir directo al catálogo →</a>
+    </div>`;
+  }
+}
+
+function render(categorias){
+  const grid = document.getElementById('grid');
+  if(!categorias.length){
+    grid.innerHTML = `<div class="state">Aún no hay pares disponibles para mostrar por categoría.</div>`;
+    return;
+  }
+
+  grid.innerHTML = categorias.map(cat=>{
+    const withImg = cat.items.find(r =>
+      driveId(cv(r[COLS.img1])) || driveId(cv(r[COLS.imgFallback1])) || driveId(cv(r[COLS.imgFallback2]))
+    );
+    const id = withImg ? (driveId(cv(withImg[COLS.img1])) || driveId(cv(withImg[COLS.imgFallback1])) || driveId(cv(withImg[COLS.imgFallback2]))) : null;
+    const imgHtml = id
+      ? `<img src="https://drive.google.com/thumbnail?id=${id}&sz=w500" alt="${esc(cat.label)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=no-img>Sin foto</div>'">`
+      : `<div class="no-img">Sin foto</div>`;
+
+    const href = cat.isOther
+      ? `${CATALOG_URL}`
+      : `${CATALOG_URL}?cat_marca=${encodeURIComponent(cat.marca)}${cat.colorGroup?`&cat_color=${cat.colorGroup}`:''}`;
+
+    return `
+    <a class="cat-card" href="${href}">
+      <div class="cat-img-wrap">
+        ${imgHtml}
+        <span class="cat-count">${cat.count} ${cat.count===1?'par':'pares'}</span>
+      </div>
+      <div class="cat-body">
+        <div class="cat-name">${esc(cat.label)}</div>
+        <div class="cat-sub">${cat.isOther?'Varias marcas':'Ver disponibles'}</div>
+      </div>
+      <div class="cat-arrow">→</div>
+    </a>`;
+  }).join('') + `
+    <div class="all-banner">
+      <div>
+        <h3>¿Buscas algo específico?</h3>
+        <p>Explora el catálogo completo con todos los filtros: talla, precio, color y más.</p>
+      </div>
+      <a class="all-banner-btn" href="${CATALOG_URL}">Ver catálogo completo →</a>
+    </div>
+  `;
+}
+
+// Skeleton mientras carga
+document.getElementById('grid').innerHTML = Array.from({length:6},()=>`
+  <div class="cat-card skeleton">
+    <div class="cat-img-wrap"></div>
+    <div class="cat-body">
+      <div class="cat-name">&nbsp;</div>
+    </div>
+  </div>`).join('');
+
+loadCategories();
+</script>
+</body>
+</html>

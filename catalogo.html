@@ -819,7 +819,7 @@ body.dark .modal-id-badge{background:rgba(255,255,255,.06)}
       ♡ <span id="fav-count-badge" class="fav-count-badge hidden">0</span>
     </button>
     <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Cambiar tema">🌙</button>
-    <button class="refresh-btn" onclick="loadData()">↻ Actualizar</button>
+    <button class="refresh-btn" onclick="refreshCatalog()">↻ Actualizar</button>
   </div>
 </header>
 
@@ -1075,12 +1075,24 @@ async function fetchSheetRows(){
   const cacheKey = 'ls_catalog_cache';
   const cacheTs  = 'ls_catalog_ts';
   const now = Date.now();
+
+  // La actualización manual debe ignorar la caché de sesión.
+  // loadData(true) se usa desde el botón "Actualizar".
+  const forceRefresh = window.__forceCatalogRefresh === true;
+  window.__forceCatalogRefresh = false;
+
   const ts  = parseInt(sessionStorage.getItem(cacheTs)||'0');
-  if(now-ts<CONFIG.cacheTTL){
+  if(!forceRefresh && now-ts<CONFIG.cacheTTL){
     const cached = sessionStorage.getItem(cacheKey);
     if(cached) return JSON.parse(cached);
   }
-  const r = await fetch(CONFIG.csvUrl);
+
+  const separator = CONFIG.csvUrl.includes('?') ? '&' : '?';
+  const fetchUrl = forceRefresh
+    ? CONFIG.csvUrl + separator + '_refresh=' + Date.now()
+    : CONFIG.csvUrl;
+
+  const r = await fetch(fetchUrl, {cache:'no-store'});
   if(!r.ok) throw new Error(`Error HTTP ${r.status}`);
   const text = await r.text();
   const rows = parseCSV(text);
@@ -1130,7 +1142,19 @@ function thumbUrl(id,size=400){
 function cv(v){const t=(v||'').trim();return t==='​'?'':t;}
 function cleanPrice(p){const n=parseFloat((p||'').replace(/[$,\s]/g,''));return isNaN(n)?null:n;}
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function isNegro(color){ return (color||'').trim().toUpperCase()==='NEGRO'; }
+function normalizeGroupValue(v){
+  return String(v||'')
+    .trim()
+    .toUpperCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/\s+/g,' ');
+}
+function sizeValue(v){
+  const n=parseFloat(String(v||'').replace(',','.'));
+  return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
+}
+function isNegro(color){ return normalizeGroupValue(color)==='NEGRO'; }
 function priceLabel(item){
   const p = item.precio ?? item.precioEst;
   return p!=null ? `$${p.toFixed(0)}` : '';
@@ -1139,6 +1163,14 @@ function priceLabel(item){
 /* ══════════════════════════════════════════
    LOAD & MAP
 ══════════════════════════════════════════ */
+function refreshCatalog(){
+  // Limpia la caché de sesión y fuerza una nueva lectura del CSV publicado.
+  sessionStorage.removeItem('ls_catalog_cache');
+  sessionStorage.removeItem('ls_catalog_ts');
+  window.__forceCatalogRefresh = true;
+  loadData();
+}
+
 async function loadData(){
   const el = document.getElementById('catalog');
   // Skeleton loading
@@ -1188,18 +1220,26 @@ async function loadData(){
           destacado:parseInt(cv(r[C.destacado]))||0,
           imgIds,
         };
-      })
-      // Orden base: agrupa visualmente por modelo+color+talla en vez del orden crudo del Sheet
-      .sort((a,b)=>
-        a.modelo.localeCompare(b.modelo) ||
-        a.color.localeCompare(b.color) ||
-        parseFloat(a.talla)-parseFloat(b.talla)
-      );
+      });
+
+    // Orden base robusto: agrupa por MODELO + COLOR y luego ordena por TALLA.
+    // La comparación se hace con valores normalizados para que diferencias
+    // como "Negro", "NEGRO" o espacios extra no separen los grupos.
+    allItems.sort((a,b)=>{
+      const modeloA = normalizeGroupValue(a.modelo);
+      const modeloB = normalizeGroupValue(b.modelo);
+      const colorA  = normalizeGroupValue(a.color);
+      const colorB  = normalizeGroupValue(b.color);
+
+      return modeloA.localeCompare(modeloB, 'es', {numeric:true, sensitivity:'base'}) ||
+             colorA.localeCompare(colorB, 'es', {numeric:true, sensitivity:'base'}) ||
+             sizeValue(a.talla)-sizeValue(b.talla);
+    });
 
     // Clave de grupo (modelo+color) para saber cuántos pares hermanos tiene cada uno
     const groupCounts = {};
     allItems.forEach(i=>{
-      const k = i.modelo+'||'+i.color;
+      const k = normalizeGroupValue(i.modelo)+'||'+normalizeGroupValue(i.color);
       i.groupKey = k;
       groupCounts[k] = (groupCounts[k]||0)+1;
     });
@@ -1238,7 +1278,7 @@ async function loadData(){
       <h2>No se pudo cargar</h2>
       <p>${err.message}</p>
       <p>Asegúrate de que el Sheets esté publicado:<br><em>Archivo → Publicar en la web → CSV</em></p>
-      <button class="retry-btn" onclick="loadData()">↻ Reintentar</button>
+      <button class="retry-btn" onclick="refreshCatalog()">↻ Reintentar</button>
     </div>`;
   }
 }
@@ -1363,8 +1403,8 @@ function applyFilters(){
 
   if(sort==='precio-asc')    filtered.sort((a,b)=>(a.precio||9999)-(b.precio||9999));
   if(sort==='precio-desc')   filtered.sort((a,b)=>(b.precio||0)-(a.precio||0));
-  if(sort==='talla-asc')     filtered.sort((a,b)=>parseFloat(a.talla)-parseFloat(b.talla));
-  if(sort==='talla-desc')    filtered.sort((a,b)=>parseFloat(b.talla)-parseFloat(a.talla));
+  if(sort==='talla-asc')     filtered.sort((a,b)=>sizeValue(a.talla)-sizeValue(b.talla));
+  if(sort==='talla-desc')    filtered.sort((a,b)=>sizeValue(b.talla)-sizeValue(a.talla));
   if(sort==='destacados')    filtered.sort((a,b)=>b.destacado-a.destacado);
   // Sin orden explícito: ya vienen agrupados por modelo+color+talla desde loadData
 

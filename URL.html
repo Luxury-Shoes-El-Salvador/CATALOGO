@@ -445,7 +445,7 @@ async function loadSheetOptions(){
     const valid = rows.filter(r => cv(r[COLS.tallaUSA]));
 
     const tallas  = [...new Set(valid.map(r => cv(r[COLS.tallaUSA])).filter(Boolean))].sort((a,b)=>parseFloat(a)-parseFloat(b));
-    const cms     = [...new Set(valid.map(r => cv(r[COLS.tallaCM])).filter(Boolean))].sort((a,b)=>parseFloat(a)-parseFloat(b));
+    const cms     = [...new Set(valid.map(r => cv(r[COLS.tallaCM]).replace(/\s*cm\s*$/i, '')).filter(Boolean))].sort((a,b)=>parseFloat(a)-parseFloat(b));
     const modelos = [...new Set(valid.map(r => cv(r[COLS.modelo])).filter(Boolean))].sort();
     const suelas  = [...new Set(valid.map(r => cv(r[COLS.suela])).filter(Boolean))].sort();
 
@@ -505,7 +505,7 @@ async function loadPares(){
           imgId:   imgIds[0] || null, // solo para la miniatura de este buscador
           modelo:  cv(r[COLS.modelo]) || 'Sin modelo',
           talla:   cv(r[COLS.tallaUSA]),
-          cm:      cv(r[COLS.tallaCM]),
+          cm:      cv(r[COLS.tallaCM]).replace(/\s*cm\s*$/i, ''),
           suela:   cv(r[COLS.suela]),
           disp:    cv(r[COLS.disp]).toUpperCase(),
         };

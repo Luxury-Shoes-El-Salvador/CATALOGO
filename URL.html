@@ -216,6 +216,11 @@ body.dark .fg select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http
   width:52px;height:52px;border-radius:8px;object-fit:cover;
   background:var(--cream);flex-shrink:0;
 }
+.par-noimg{
+  width:52px;height:52px;border-radius:8px;flex-shrink:0;
+  background:var(--cream);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+}
 .par-info{flex:1;min-width:0}
 .par-name{
   font-size:.85rem;font-weight:600;color:var(--dark);
@@ -251,11 +256,11 @@ body.dark .fg select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http
   <div class="sec-label" style="display: none">Catálogo de destino</div>
   <div class="card" style="display: none">
     <div class="base-input">
-      <input type="text" id="base-url" placeholder="https://luxury-shoes-el-salvador.github.io/CATALOGO/" oninput="build()" aria-label="URL base del catálogo">
-      <button class="btn-catalog" onclick="setBase('https://luxury-shoes-el-salvador.github.io/CATALOGO/')">Usar Skechers</button>
+      <input type="text" id="base-url" placeholder="https://luxury-shoes-el-salvador.github.io/CATALOGO/catalogo.html" oninput="build()" aria-label="URL base del catálogo">
+      <button class="btn-catalog" onclick="setBase('https://luxury-shoes-el-salvador.github.io/CATALOGO/catalogo.html')">Usar Skechers</button>
     </div>
     <div class="catalogs-list" id="catalogs-list">
-      <span class="catalog-chip" onclick="pickCatalog(this,'https://luxury-shoes-el-salvador.github.io/CATALOGO/')">👟 Skechers</span>
+      <span class="catalog-chip" onclick="pickCatalog(this,'https://luxury-shoes-el-salvador.github.io/CATALOGO/catalogo.html')">👟 Skechers</span>
     </div>
   </div>
 
@@ -356,11 +361,12 @@ body.dark .fg select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http
 const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS7e_IekI9tZJaDGPWd8xw1wFUOpFSiQZOk-AWZwfPTmrG-PgVbXFaSxujXln8PAQqx275piuJaLLCm/pub?gid=1069283032&single=true&output=csv';
 
 const COLS = {
+  id:       'ID',
   tallaUSA: 'TALLA EN USA',
   tallaCM:  'TALLA EN CM',
   modelo:   'TIPO DE ZAPATO',
   suela:    'SUELA',
-  disp:     'DISPONIBILIDAD',
+  disp:     'ESTADO',
   img1:'IMAGEN 1', img2:'IMAGEN 2', img3:'IMAGEN 3', img4:'IMAGEN 4',
 };
 
@@ -491,15 +497,20 @@ async function loadPares(){
         addId(r[COLS.img1]); addId(r[COLS.img2]);
         addId(r[COLS.img3]); addId(r[COLS.img4]);
         return {
-          modelo: cv(r[COLS.modelo]) || 'Sin modelo',
-          talla:  cv(r[COLS.tallaUSA]),
-          cm:     cv(r[COLS.tallaCM]),
-          suela:  cv(r[COLS.suela]),
-          disp:   cv(r[COLS.disp]).toUpperCase(),
-          parId:  imgIds[0] || null,
+          // shareId: mismo identificador que usa catalogo.html para compartir
+          // (columna ID, ej. "LX0003"); si por alguna razón faltara, usamos
+          // el id de la primera foto como respaldo — catalogo.html también
+          // reconoce ese caso (it.id === par || it.imgIds[0] === par).
+          shareId: cv(r[COLS.id]) || imgIds[0] || null,
+          imgId:   imgIds[0] || null, // solo para la miniatura de este buscador
+          modelo:  cv(r[COLS.modelo]) || 'Sin modelo',
+          talla:   cv(r[COLS.tallaUSA]),
+          cm:      cv(r[COLS.tallaCM]),
+          suela:   cv(r[COLS.suela]),
+          disp:    cv(r[COLS.disp]).toUpperCase(),
         };
       })
-      .filter(p => p.parId); // solo pares con al menos una foto (necesaria para el id único)
+      .filter(p => p.shareId); // necesita al menos un identificador compartible
 
   } catch(err){
     console.error('Error cargando pares:', err);
@@ -525,26 +536,28 @@ function renderParResults(){
   }
 
   box.innerHTML = matches.map(p => {
-    const url   = buildParUrl(p.parId);
-    const thumb = thumbUrl(p.parId, 100);
+    const thumb = p.imgId ? thumbUrl(p.imgId, 100) : null;
+    const imgHtml = thumb
+      ? `<img src="${thumb}" alt="${esc(p.modelo)}" loading="lazy" onerror="this.outerHTML='<div class=par-noimg>👟</div>'">`
+      : `<div class="par-noimg">👟</div>`;
     const vendidoTag = p.disp === 'VENDIDO' ? ' · <span class="vendido">Vendido</span>' : '';
     return `
     <div class="par-item">
-      <img src="${thumb}" alt="${esc(p.modelo)}" loading="lazy" onerror="this.style.visibility='hidden'">
+      ${imgHtml}
       <div class="par-info">
         <div class="par-name">${esc(p.modelo)}</div>
         <div class="par-meta">Talla ${esc(p.talla)}${p.cm ? ' · '+esc(p.cm)+' cm' : ''}${vendidoTag}</div>
       </div>
       <div class="par-actions">
-        <button onclick="copyParUrl('${p.parId}')" title="Copiar enlace" aria-label="Copiar enlace">🔗</button>
-        <button class="wa" onclick="shareParWa('${p.parId}','${esc(p.modelo).replace(/'/g,"\\'")}','${esc(p.talla)}','${esc(p.cm)}')" title="Compartir por WhatsApp" aria-label="Compartir por WhatsApp">💬</button>
+        <button onclick="copyParUrl('${p.shareId}')" title="Copiar enlace" aria-label="Copiar enlace">🔗</button>
+        <button class="wa" onclick="shareParWa('${p.shareId}','${esc(p.modelo).replace(/'/g,"\\'")}','${esc(p.talla)}','${esc(p.cm)}')" title="Compartir por WhatsApp" aria-label="Compartir por WhatsApp">💬</button>
       </div>
     </div>`;
   }).join('');
 }
 
 function buildParUrl(parId){
-  const base = document.getElementById('base-url').value.trim() || 'https://luxury-shoes-el-salvador.github.io/CATALOGO/';
+  const base = document.getElementById('base-url').value.trim() || 'https://luxury-shoes-el-salvador.github.io/CATALOGO/catalogo.html';
   const sep  = base.includes('?') ? '&' : '?';
   return base + sep + 'par=' + parId;
 }
@@ -711,7 +724,7 @@ function toggleTheme(){
 window.addEventListener('DOMContentLoaded', () => {
   const chip = document.querySelector('.catalog-chip');
   if(chip) chip.classList.add('active');
-  document.getElementById('base-url').value = 'https://luxury-shoes-el-salvador.github.io/CATALOGO/';
+  document.getElementById('base-url').value = 'https://luxury-shoes-el-salvador.github.io/CATALOGO/catalogo.html';
   loadSheetOptions();
   loadPares();
   build();

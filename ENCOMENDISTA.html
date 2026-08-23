@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENCOMENDISTA — Consulta de rutas y horarios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0f1720;
+    --surface: #182534;
+    --surface-alt: #1f3040;
+    --line: #2a3b4d;
+    --text: #eef3f7;
+    --muted: #7c8fa3;
+    --melo: #ff8a3d;
+    --melo-dim: #4d3020;
+    --pedidos: #2dd4bf;
+    --pedidos-dim: #1c3e3a;
+    --signal: #f4c542;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(1200px 600px at 50% -10%, #172433 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height:100vh;
+    padding-bottom: 60px;
+  }
+  a{color:inherit;}
+
+  /* ---- Header tipo tablero ---- */
+  header{
+    padding: 28px 20px 20px;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  .board-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap: wrap;
+    gap: 14px;
+    border-bottom: 2px solid var(--line);
+    padding-bottom: 18px;
+  }
+  .brand{
+    font-family:'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 5vw, 40px);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .brand span{ color: var(--signal); }
+  .brand small{
+    display:block;
+    font-family:'Inter', sans-serif;
+    font-weight:500;
+    font-size: 13px;
+    color: var(--muted);
+    text-transform:none;
+    letter-spacing: 0;
+    margin-top: 6px;
+  }
+  .today-box{
+    text-align:right;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .today-box .label{
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .today-box .day{
+    font-size: 22px;
+    color: var(--signal);
+    font-weight:600;
+    letter-spacing: 1px;
+  }
+
+  /* ---- Controles ---- */
+  .controls{
+    max-width: 980px;
+    margin: 20px auto 0;
+    padding: 0 20px;
+  }
+  .search-wrap{
+    position:relative;
+  }
+  #search{
+    width:100%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 16px;
+    padding: 14px 16px 14px 44px;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  #search::placeholder{ color: var(--muted); }
+  #search:focus{ border-color: var(--signal); background: var(--surface-alt); }
+  .search-wrap::before{
+    content:"⌕";
+    position:absolute;
+    left:15px; top:50%; transform:translateY(-50%);
+    color: var(--muted);
+    font-size:20px;
+  }
+
+  .filter-row{
+    display:flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .chip-group{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .chip-group .glabel{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    color: var(--muted);
+    margin-right: 4px;
+  }
+  .chip{
+    border:1px solid var(--line);
+    background: var(--surface);
+    color: var(--muted);
+    padding: 7px 13px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor:pointer;
+    user-select:none;
+    transition: all .15s ease;
+    white-space:nowrap;
+  }
+  .chip:hover{ border-color: var(--signal); color: var(--text); }
+  .chip.active{
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+    font-weight:600;
+  }
+  .chip.active.melo{ background: var(--melo); border-color: var(--melo); color:#20130a; }
+  .chip.active.pedidos{ background: var(--pedidos); border-color: var(--pedidos); color:#062421; }
+  .chip.is-today{ border-color: var(--signal); color: var(--signal); }
+
+  .meta-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top: 18px;
+    color: var(--muted);
+    font-size: 13px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  #clear-btn{
+    background:none;
+    border:none;
+    color: var(--muted);
+    text-decoration:underline;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+  }
+  #clear-btn:hover{ color: var(--text); }
+
+  /* ---- Tablero de resultados ---- */
+  main{
+    max-width: 980px;
+    margin: 8px auto 0;
+    padding: 0 20px;
+  }
+  .row{
+    display:grid;
+    grid-template-columns: 1.6fr 1fr 1.3fr 2fr auto;
+    gap: 16px;
+    align-items:center;
+    padding: 16px 14px;
+    border-bottom: 1px solid var(--line);
+    animation: fadeIn .25s ease;
+  }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(2px);} to{opacity:1; transform:none;} }
+
+  .row.today{
+    background: linear-gradient(90deg, rgba(244,197,66,0.08), transparent 60%);
+    border-left: 3px solid var(--signal);
+    padding-left: 11px;
+  }
+
+  .col-dest{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .dest-name{
+    font-family:'Oswald', sans-serif;
+    font-size: 18px;
+    font-weight:600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .dest-tags{
+    display:flex;
+    gap:6px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .tag{
+    font-size: 10px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 7px;
+    border-radius: 4px;
+  }
+  .tag.melo{ background: var(--melo-dim); color: var(--melo); }
+  .tag.pedidos{ background: var(--pedidos-dim); color: var(--pedidos); }
+  .tag.tipo{ background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  .tag.hoy{ background: var(--signal); color:#241a02; }
+  .tag.notas{ background: transparent; color: var(--signal); border: 1px solid var(--signal); }
+
+  .col-dias{
+    display:flex;
+    gap:4px;
+    flex-wrap:wrap;
+  }
+  .day-pill{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    width: 30px;
+    height: 22px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius: 4px;
+    color: var(--muted);
+    border: 1px solid var(--line);
+  }
+  .day-pill.on{
+    color: var(--text);
+    border-color: var(--muted);
+    background: var(--surface-alt);
+  }
+  .day-pill.on.today-pill{
+    color: var(--bg);
+    background: var(--signal);
+    border-color: var(--signal);
+    font-weight:700;
+  }
+
+  .col-horario{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: var(--text);
+    line-height:1.4;
+  }
+  .col-horario .ruta-tag{
+    display:block;
+    font-family:'Inter', sans-serif;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .col-lugar{
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height:1.5;
+  }
+
+  .col-copy{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+  }
+  .copy-btn{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family:'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s ease;
+  }
+  .copy-btn:hover{
+    border-color: var(--signal);
+    color: var(--text);
+    background: var(--surface-alt);
+  }
+  .copy-btn.copied{
+    border-color: var(--pedidos);
+    color: var(--pedidos);
+    background: var(--pedidos-dim);
+  }
+  .copy-btn svg{ width:14px; height:14px; flex-shrink:0; }
+
+  /* header de columnas (desktop) */
+  .col-headers{
+    display:grid;
+    grid-template-columns: 1.6fr 1fr 1.3fr 2fr auto;
+    gap: 16px;
+    padding: 0 14px 10px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .empty-state{
+    text-align:center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state .big{
+    font-family:'Oswald', sans-serif;
+    font-size: 22px;
+    color: var(--text);
+    margin-bottom: 8px;
+    text-transform:uppercase;
+  }
+
+  footer{
+    max-width:980px;
+    margin: 30px auto 0;
+    padding: 16px 20px;
+    color: var(--muted);
+    font-size: 12px;
+    border-top: 1px solid var(--line);
+  }
+
+  /* ---- Mobile ---- */
+  @media (max-width: 720px){
+    .col-headers{ display:none; }
+    .row{
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 16px 12px;
+    }
+    .col-horario{ order:2; }
+    .col-dias{ order:3; }
+    .col-lugar{ order:4; }
+    .col-copy{ order:5; justify-content:stretch; }
+    .col-copy .copy-btn{ width:100%; justify-content:center; padding: 11px 12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .row{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="board-top">
+    <div class="brand">
+      Encomiendas<span>SV</span>
+      <small>Consulta unificada de rutas y horarios — Melo Express &amp; Pedidos Express</small>
+    </div>
+    <div class="today-box">
+      <div class="label">Hoy</div>
+      <div class="day" id="today-day">—</div>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="search-wrap">
+    <input id="search" type="text" placeholder="Buscar destino… (ej. Zacatecoluca, Ahuachapán, Metrocentro)" autocomplete="off">
+  </div>
+
+  <div class="filter-row">
+    <div class="chip-group" id="group-encomendista">
+      <span class="glabel">Encomendista</span>
+      <span class="chip active" data-val="">Todos</span>
+      <span class="chip melo" data-val="Melo Express">Melo Express</span>
+      <span class="chip pedidos" data-val="Pedidos Express">Pedidos Express</span>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <div class="chip-group" id="group-dia">
+      <span class="glabel">Día</span>
+      <span class="chip active" data-val="">Todos</span>
+      <span class="chip" data-val="Lunes">Lun</span>
+      <span class="chip" data-val="Martes">Mar</span>
+      <span class="chip" data-val="Miércoles">Mié</span>
+      <span class="chip" data-val="Jueves">Jue</span>
+      <span class="chip" data-val="Viernes">Vie</span>
+      <span class="chip" data-val="Sábado">Sáb</span>
+      <span class="chip" data-val="Domingo">Dom</span>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <div class="chip-group" id="group-tipo">
+      <span class="glabel">Tipo</span>
+      <span class="chip active" data-val="">Todos</span>
+      <span class="chip" data-val="Agencia">Agencia</span>
+      <span class="chip" data-val="Punto de Ruta">Punto de ruta</span>
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <span id="result-count">Cargando…</span>
+    <button id="clear-btn">Limpiar filtros</button>
+  </div>
+</div>
+
+<main>
+  <div class="col-headers">
+    <div>Destino</div>
+    <div>Días</div>
+    <div>Horario</div>
+    <div>Lugar de encuentro / entrega</div>
+    <div></div>
+  </div>
+  <div id="results"></div>
+</main>
+
+<footer>
+  Fuente: hoja ENCOMENDISTA del inventario (Melo Express &amp; Pedidos Express), unificada para consulta rápida. Verificá siempre horarios de última hora directamente con el encomendista.
+</footer>
+
+<script>
+const DATA_EMBEBIDA = [{"id":1,"destino":"Acajutla","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Sonsonate","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"1:00 pm - 1:30 pm","lugar":"Frente a Don Pollo y la nevería, en el mercado","notas":""},{"id":2,"destino":"Acajutla","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":3,"destino":"Agencia Melo Express San Miguel","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: San Miguel","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"8:00 am - 4:00 pm","lugar":"100 mts abajo del centro de tela, a la par de foto estudio Nelson","notas":""},{"id":4,"destino":"Agencia Santa Ana","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Santa Ana","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"8:00 am - 4:30 pm","lugar":"Centro Comercial Cuatro Plaza local 2, Santa Ana","notas":""},{"id":5,"destino":"Agua Caliente","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:10 am - 9:30 am","lugar":"Frente a Iglesia Católica","notas":""},{"id":6,"destino":"Aguilares","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Chalatenango 1","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"9:00 am - 9:30 am","lugar":"Afuera del Biggest","notas":""},{"id":7,"destino":"Aguilares","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"10:00 am - 4:00 pm (Recepción de paquetes de 9:00 am - 11:45 am/Entrega de paquetes de Lunes a viernes de 10 am a 4 pm. Sábado de 9 am a 12 md)","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":8,"destino":"Ahuachapan","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Ahuachapan","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:30 am - 12:30 pm","lugar":"Parque la concordia, a la vuelta de la neveria, en calle hacia tacuba","notas":""},{"id":9,"destino":"Ahuachapan","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 1:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":10,"destino":"Alegría","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"8:00 am - 8:30 am","lugar":"Parque Central","notas":""},{"id":11,"destino":"Altavista","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":12,"destino":"Anamoros","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Miércoles","Domingo"],"dias_texto":"Miércoles y Domingo","horario":"9:50 am - 10:20 am","lugar":"Parque Central","notas":""},{"id":13,"destino":"Antiguo Cuscatlan","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábado","horario":"1:00 pm - 1:40 pm","lugar":"Parque / Esquina de don pollo","notas":""},{"id":14,"destino":"Apaneca","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"12:45 pm - 1:15 pm","lugar":"Parque frente a plaza turística","notas":""},{"id":15,"destino":"Apastepeque","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:30 am - 10:00 am","lugar":"Frente a iglesia y parque Jose Canales","notas":""},{"id":16,"destino":"Apopa","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Chalatenango 1","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"5:15 pm - 5:45 pm","lugar":"Gasolinera Puma Por pericentro","notas":""},{"id":17,"destino":"Apopa","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 1:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":18,"destino":"Armenia","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Lourdes","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábados","horario":"4:20 pm - 4:50 pm","lugar":"Parque central Frente a la alcaldia","notas":""},{"id":19,"destino":"Armenia","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 1:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":20,"destino":"Armenia","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Domingo"],"dias_texto":"Domingo","horario":"8:00 am - 9:00 am","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":21,"destino":"Ataco","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"1:40 pm - 2:00 pm","lugar":"Parque central","notas":""},{"id":22,"destino":"Ateos","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Lourdes","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábados","horario":"3:30 pm - 3:50 pm","lugar":"Gasolinera puma ateos","notas":""},{"id":23,"destino":"Ateos","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"12:30 pm - 1:00 pm","lugar":"Gasolinera Puma","notas":""},{"id":24,"destino":"Atiquizaya","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Ahuachapan","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"1:30 pm - 2:00 pm","lugar":"Frente a la alcaldia","notas":""},{"id":25,"destino":"Atiquizaya","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":26,"destino":"Berlín","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":27,"destino":"Cacaopera","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"8:00 am - 8:30 am","lugar":"Parque Central","notas":""},{"id":28,"destino":"Candelaria de la Frontera","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Santa Ana","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"3:15 pm - 3:45 pm","lugar":"Frente a la Alcaldía Municipal","notas":""},{"id":29,"destino":"Candelaria de la Frontera","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":30,"destino":"Cara Sucia","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Sonsonate","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"3:00 pm - 3:30 pm","lugar":"Parqueo que esta a la par de pollo campero","notas":""},{"id":31,"destino":"Cara Sucia","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":32,"destino":"Chalatenango","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Chalatenango 1","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"2:30 pm - 3:30 pm","lugar":"Nuevo Parqueo Municipal","notas":""},{"id":33,"destino":"Chalatenango","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":34,"destino":"Chalchuapa","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Ahuachapan","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"2:30 pm - 3:30 pm","lugar":"Afuera del Cementerio General de Chalchuapa","notas":""},{"id":35,"destino":"Chalchuapa","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":36,"destino":"Chapeltique","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Morazan","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"10:30 am - 11:00 am","lugar":"Parque central","notas":""},{"id":37,"destino":"Chapeltique","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:45 am - 10:30 am","lugar":"Parque Central","notas":""},{"id":38,"destino":"Chinameca","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"1:45 pm - 2:30 pm","lugar":"Parque central","notas":""},{"id":39,"destino":"Chirilagua","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"8:00 am - 8:45 am","lugar":"Parque central","notas":""},{"id":40,"destino":"Ciudad Arce","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Santa Ana","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"8:00 am - 8:30 am","lugar":"Polideportivo que esta enfrente de La Gasolinera Texaco y Almacén Prado","notas":""},{"id":41,"destino":"Ciudad Arce","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":42,"destino":"Ciudad Barrios","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Morazan","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"12:00 pm - 12:45 pm","lugar":"Atrás de la Caja de Crédito de Ciudad Barrios, calle que va hacia el Kinder","notas":""},{"id":43,"destino":"Ciudad Barrios","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"8:00 am - 9:00 am","lugar":"A un costado de casa comunal","notas":""},{"id":44,"destino":"Ciudad Delgado","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"2:00 pm - 3:00 pm","lugar":"Tramo de pupuseria mamamila / pizza buonesera","notas":""},{"id":45,"destino":"Ciudad El Triunfo","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"11:15 am - 12:00 pm","lugar":"Frente a Iglesia Católica","notas":""},{"id":46,"destino":"Ciudad Marsella","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"10:20 am - 11:00 am","lugar":"Parada de buses","notas":""},{"id":47,"destino":"Ciudad Real","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Ahuachapan","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"3:45 pm - 4:15 pm","lugar":"Gasolinera 1 ciudad real","notas":""},{"id":48,"destino":"Ciudad Real","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:00 am - 10:00 am","lugar":"Entrada de Gasolinera UNO a orilla de carretera","notas":""},{"id":49,"destino":"Ciudad Versalles","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:20 am - 12:00 pm","lugar":"Entrada Vehicular Gasolinera UNO","notas":""},{"id":50,"destino":"Coatepeque","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"8:00 am - 9:00 am","lugar":"Parque frente a Acacespsa","notas":""},{"id":51,"destino":"Cojutepeque","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Sensuntepeque","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"8:00 am - 9:00 am","lugar":"En el parque Alamedas de San Juan frente a la alcaldia","notas":""},{"id":52,"destino":"Cojutepeque","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":53,"destino":"Comalapa","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: la Paz","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:15 am - 9:45 am","lugar":"Parqueo que esta adentro de gasolinera puma calle vieja","notas":""},{"id":54,"destino":"Concepción Batres","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"12:25 pm - 12:45 pm","lugar":"En el parque municipal","notas":""},{"id":55,"destino":"Conchagua","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:20 am - 11:50 am","lugar":"Kiosko del parque frente a juzgado","notas":""},{"id":56,"destino":"Corinto","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Miércoles","Domingo"],"dias_texto":"Miércoles y Domingo","horario":"11:45 am - 12:15 pm","lugar":"Parque Central","notas":""},{"id":57,"destino":"Costa del Sol","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: la Paz","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"1:30 pm - 2:00 pm","lugar":"Frente al turicentro","notas":""},{"id":58,"destino":"Desvio de Amayo","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Chalatenango 2","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"4:15 pm - 4:45 pm","lugar":"Gasolinera Texaco Aldeitas","notas":""},{"id":59,"destino":"Desvio de Opico","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Quezaltepeque","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábados","horario":"3:00 pm - 3:30 pm","lugar":"Gasolinera UNO Desvió de Opico","notas":""},{"id":60,"destino":"Desvio de Opico","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"12:15 pm - 1:00 pm","lugar":"Gasolinera UNO - Parada de buses","notas":""},{"id":61,"destino":"Dolores","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"1:20 pm - 1:45 pm","lugar":"Parque Central","notas":""},{"id":62,"destino":"Dulce Nombre de Maria","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Chalatenango 1","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"1:00 pm - 1:30 pm","lugar":"A la par de la iglesia católica","notas":""},{"id":63,"destino":"El Carmen (La Union)","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"12:30 pm - 1:00 pm","lugar":"Parque el carmen","notas":""},{"id":64,"destino":"El Congo","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Santa Ana","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"9:00 am - 9:20 am","lugar":"40 metros abajo de despensa familiar, calle de los juzgados, a un costado de Funeraria Huerto del Eden","notas":""},{"id":65,"destino":"El Congo","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"9:30 am - 12 pm","lugar":"Local De Entrega (SOLO EN HORARIO DE ENTREGA)","notas":""},{"id":66,"destino":"El Divisadero","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"8:00 am - 8:30 am","lugar":"Parque recreativo el divisadero","notas":""},{"id":67,"destino":"El Encuentro San Marcos","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: la Paz","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"4:30 pm - 5:00 pm","lugar":"Afuera del encuentro San Marcos","notas":""},{"id":68,"destino":"El Paraiso Chalatenango","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Chalatenango 1","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:15 am - 11:45 am","lugar":"Parque Central frente a la iglesia catolica","notas":""},{"id":69,"destino":"El Paraíso","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"10:20 am - 10:40 am","lugar":"Frente a Neveria y Farmacia La Salud","notas":""},{"id":70,"destino":"El Refugio","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"10:30 am - 11:00 am","lugar":"Frente a Alcaldía","notas":""},{"id":71,"destino":"El Rosario La Paz","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"1:15 pm - 1:45 pm","lugar":"Parque Municipal","notas":""},{"id":72,"destino":"El Transito","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Usulutan","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"3:45 pm - 4:15 pm","lugar":"Frente a Comercial Lecy y Lacteos La Fe, 1 cuadra adelante de la Despensa Familiar","notas":""},{"id":73,"destino":"El Tránsito","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"1:00 pm - 2:00 pm","lugar":"Frente a Despensa Familiar","notas":""},{"id":74,"destino":"Estanzuelas","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"10:10 am - 10:45 am","lugar":"Parque Central","notas":""},{"id":75,"destino":"Guazapa","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Chalatenango 1","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"8:00 am - 8:30 am","lugar":"Parque central frente a la iglesia catolica","notas":""},{"id":76,"destino":"Guazapa","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"12:20 pm - 1:00 pm","lugar":"Parque Central","notas":""},{"id":77,"destino":"Ilobasco","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Sensuntepeque","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"1:00 pm - 1:45 pm","lugar":"Parque central frente a Ellys Cakes","notas":""},{"id":78,"destino":"Ilobasco","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"9:00 am- 1:00 pm","lugar":"Local De Entrega","notas":""},{"id":79,"destino":"Ilopango","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"8:30 am - 9:00 am","lugar":"Fte. A escuela Fabio Castillo","notas":""},{"id":80,"destino":"Intipuca","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"10:00 am - 10:30 am","lugar":"Parque fte a iglesia","notas":""},{"id":81,"destino":"Izalco","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Sonsonate","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"8:30 am - 9:00 am","lugar":"Parque central a un costado de la alcaldia","notas":""},{"id":82,"destino":"Izalco","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":83,"destino":"Izalco","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Domingo"],"dias_texto":"Domingo","horario":"10:30 am - 11:30 am","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":84,"destino":"Jiquilisco","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Usulutan","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"11:30 am - 12:00 pm","lugar":"Parque Central frente a las Letras","notas":""},{"id":85,"destino":"Jiquilisco","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":86,"destino":"Jocoro","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: San Miguel","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"12:00 pm - 12:30 pm","lugar":"Parque Central frente a la Iglesia Católica","notas":""},{"id":87,"destino":"Jocoro","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"8:45 am - 9:30 am","lugar":"Afuera de iglesia San Felipe","notas":""},{"id":88,"destino":"Juayua","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Ahuachapan","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"9:45 am - 10:15 am","lugar":"Parque central frente a la iglesia católica","notas":""},{"id":89,"destino":"Juayúa","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:30 am - 5:00 pm (Recepción de paquetes de 9:00 am - 10:30 am/Entrega de paquetes de Lunes a Miércoles y de Jueves a Sábado).","lugar":"Local De Entrega (Paquete Dura 3 Dias","notas":"Costo Extra $0.50"},{"id":90,"destino":"Jucuapa","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"12:30 pm - 1:30 pm","lugar":"Parque Central","notas":""},{"id":91,"destino":"La gran vía","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:45 am - 10:15 am","lugar":"Frente a simán por gasolinera Shell","notas":""},{"id":92,"destino":"La Palma","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Chalatenango 2","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:30 am - 12:00 pm","lugar":"Parqueo municipal de la Palma","notas":""},{"id":93,"destino":"La Palma","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"2:00 pm - 2:30 pm","lugar":"Parque entre ferreteria central y parqueo municipal","notas":""},{"id":94,"destino":"La Reina","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Chalatenango 2","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"9:00 am - 9:30 am","lugar":"Parque Central se subirá foto en el lugar","notas":""},{"id":95,"destino":"La Union","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: San Miguel","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"3:00 pm - 4:00 pm","lugar":"Parqueo que esta frente Banco Agrícola","notas":""},{"id":96,"destino":"La Unión","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":97,"destino":"Lislique","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Miércoles","Domingo"],"dias_texto":"Miércoles y Domingo","horario":"10:45 am - 11:15 am","lugar":"Parque Central","notas":""},{"id":98,"destino":"Lolotique","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"1:30 pm - 2:00 pm","lugar":"Parque frente a Iglesia","notas":""},{"id":99,"destino":"Los Naranjos","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"8:30 am - 9:00 am","lugar":"Afuera de Iglesia de Mormones, frente a puesto PNC y Gas UNO","notas":""},{"id":100,"destino":"Lourdes","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":101,"destino":"Marsella","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Quezaltepeque","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábados","horario":"5:15 pm - 5:40 pm","lugar":"Afuera del Centro Comercial","notas":""},{"id":102,"destino":"Mercedes Umaña","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:15 am - 9:45 am","lugar":"Parque Central","notas":""},{"id":103,"destino":"Metalio","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Sonsonate","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"2:15 pm - 2:30 pm","lugar":"Plaza metalio","notas":""},{"id":104,"destino":"Metalío","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":105,"destino":"Metapan","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Santa Ana","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:00 am - 12:00 pm","lugar":"Frente a Funeraria Chacon, 100 metros abajo de Little Caessars","notas":""},{"id":106,"destino":"Metapán","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":107,"destino":"Metrocentro Lourdes","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Lourdes","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábados","horario":"1:30 pm - 2:30 pm","lugar":"Afuera de papa jhons, por parada de ruta 3","notas":""},{"id":108,"destino":"Metrocentro San Miguel","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: San Miguel","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:00 am - 10:00 am","lugar":"Plaza el encuentro Roosevelt San Miguel, frente a Metrocentro","notas":""},{"id":109,"destino":"Metrocentro Sonsonate","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Sonsonate","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:30 am - 12:15 pm","lugar":"Frente a Galvanissa, a un costado de Farmacia Brasil","notas":""},{"id":110,"destino":"Moncagua","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Morazan","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:30 am - 10:00 am","lugar":"Parque central frente a la Iglesia","notas":""},{"id":111,"destino":"Moncagua","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"12:30 pm - 1:00 pm","lugar":"Parque Central","notas":""},{"id":112,"destino":"Montelimar","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: la Paz","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"7:30 am - 8:00 am","lugar":"Debajo de la pasarela","notas":""},{"id":113,"destino":"Nahuizalco","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Ahuachapan","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"8:30 am - 9:00 am","lugar":"Afuera de Farmacia santísimas trinidad","notas":""},{"id":114,"destino":"Nahuizalco","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:00 am - 5:00 pm (Recepción de paquetes de 9:00 am - 10:30 am/Entrega de paquetes de Lunes a Miércoles y de Jueves a Domingo. Sábado cerrado)","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":115,"destino":"Nejapa","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":116,"destino":"Nueva Concepcion","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Chalatenango 2","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"3:00 pm - 3:45 pm","lugar":"Parque Central Frente a Correos El Salvador","notas":""},{"id":117,"destino":"Nueva Concepción","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":118,"destino":"Nueva Esparta","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Miércoles","Domingo"],"dias_texto":"Miércoles y Domingo","horario":"9:15 am - 9:30 am","lugar":"Parque Central","notas":""},{"id":119,"destino":"Nueva Guadalupe","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"2:15 pm - 2:45 pm","lugar":"Parque central","notas":""},{"id":120,"destino":"Nuevo Edén de San Juan","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"12:40 pm - 1:00 pm","lugar":"Parque Central","notas":""},{"id":121,"destino":"Nuevo Lourdes","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Lourdes","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábados","horario":"2:45 pm - 3:15 pm","lugar":"A un costado de la alcaldía","notas":""},{"id":122,"destino":"Olocuilta","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: la Paz","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"8:15 am - 8:45 am","lugar":"En el mercado de artesanías","notas":""},{"id":123,"destino":"Olocuilta","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"10:30 am - 11:00 am","lugar":"Parqueo de Mercado de Artesania","notas":""},{"id":124,"destino":"Opico Centro","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"9:45 am - 10:45 am","lugar":"Parque frente a Alcaldía","notas":""},{"id":125,"destino":"Osicala","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Morazan","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"1:45 pm - 2:15 pm","lugar":"Parque central frente a la cancha","notas":""},{"id":126,"destino":"Osicala","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"9:00 am - 10:00 am","lugar":"Parque Central","notas":""},{"id":127,"destino":"Paraje Galán","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"12:15 pm - 12:45 pm","lugar":"A un costado de la PNC frente a la Nevería","notas":""},{"id":128,"destino":"Pasaquina","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"1:45 pm - 2:15 pm","lugar":"Afuera de iglesia catolica / parque central","notas":""},{"id":129,"destino":"Paseo Venecia","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"1:20 pm - 1:45 pm","lugar":"Sobre carretera de Oro, entrada al parqueo, frente a Puerto Mariscos","notas":""},{"id":130,"destino":"Planes de Renderos","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"11:00 am - 11:30 am","lugar":"Frente a mirador","notas":""},{"id":131,"destino":"Playa el cuco","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"9:10 am - 9:40 am","lugar":"Parque el cuco","notas":""},{"id":132,"destino":"Plaza Don Yon","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Chalatenango 1","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"10:00 am - 10:30 am","lugar":"Entrada de la plaza","notas":""},{"id":133,"destino":"Plaza Don Yon","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"10:00 am - 10:30 am","lugar":"Parada de buses","notas":""},{"id":134,"destino":"Plaza Merliot","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:00 am - 9:30 am","lugar":"Gasolinera Shell frente a parqueo de Wendy's","notas":""},{"id":135,"destino":"Plaza San Jacinto","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"12:45 pm - 1:15 pm","lugar":"Salida del centro comercial","notas":""},{"id":136,"destino":"Plaza Santo Tomás","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:00 am - 9:30 am","lugar":"Afuera de Curacao","notas":""},{"id":137,"destino":"Poloros","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Miércoles","Domingo"],"dias_texto":"Miércoles y Domingo","horario":"8:30 am - 9:00 am","lugar":"Parque Central","notas":""},{"id":138,"destino":"Puerto de la Libertad","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Puerto de la Libertad","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábados","horario":"2:00 pm - 3:00 pm","lugar":"Adentro del Centro Comercial El Faro","notas":""},{"id":139,"destino":"Puerto de La Libertad","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábado","horario":"3:30 pm - 4:30 pm","lugar":"Fte a casa agricola","notas":""},{"id":140,"destino":"Puerto el Triunfo","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Usulutan","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"12:50 pm - 1:15 pm","lugar":"Frente a la Alcaldia","notas":""},{"id":141,"destino":"Puerto El Triunfo","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"9:40 am - 10:30 am","lugar":"Esquina de Alcaldía","notas":""},{"id":142,"destino":"Quezaltepeque","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Quezaltepeque","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábados","horario":"1:00 pm - 1:45 pm","lugar":"Parque central frente a Lee cafe","notas":""},{"id":143,"destino":"Quezaltepeque","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":144,"destino":"Salcoatitán","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:45 am - 12:15 pm","lugar":"A un costado de iglesia catolica","notas":""},{"id":145,"destino":"Salvador del Mundo","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"10:00 am - 4:00 pm","lugar":"Local De Entrega (SOLO EN HORARIO DE ENTREGA)","notas":""},{"id":146,"destino":"San Alejo","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"1:30 pm - 2:00 pm","lugar":"Parque central fte a iglesia","notas":""},{"id":147,"destino":"San Antonio Pajonal","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"11:00 am - 11:45 am","lugar":"Afuera de Alcaldía","notas":""},{"id":148,"destino":"San Esteban Catarina","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"12:45 pm - 1:15 pm","lugar":"Frente a Iglesia Católica","notas":""},{"id":149,"destino":"San Francisco Gotera","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Morazan","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"3:15 pm - 4:15 pm","lugar":"Parqueo Municipal","notas":""},{"id":150,"destino":"San Francisco Gotera","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":151,"destino":"San Gerardo","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:50 am - 12:20 pm","lugar":"Parque Central","notas":""},{"id":152,"destino":"San Ignacio","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Chalatenango 2","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"1:00 pm - 1:30 pm","lugar":"Parque Central, frente a la Caja de Crédito de San Ignacio","notas":""},{"id":153,"destino":"San Ignacio","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"2:45 pm - 3:00 pm","lugar":"Entrada del parque, frente a Alcaldía","notas":""},{"id":154,"destino":"San Ildefonso","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"2:10 pm - 2:30 pm","lugar":"Parque Central","notas":""},{"id":155,"destino":"San Isidro","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:30 am - 12:00 pm","lugar":"Cancha de basquetbol, cerca de casa de la cultura","notas":""},{"id":156,"destino":"San Jorge","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"3:00 pm - 3:30 pm","lugar":"Cerca de Alcaldía Municipal","notas":""},{"id":157,"destino":"San Jose Villanueva","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Puerto de la Libertad","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábados","horario":"3:45 pm - 4:15 pm","lugar":"Frente a la Alcaldía","notas":""},{"id":158,"destino":"San Juan Nonualco","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Usulutan","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:10 am - 9:30 am","lugar":"Parque Central","notas":""},{"id":159,"destino":"San Juan Nonualco","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"10:30 am - 11:00 am","lugar":"Parque Central","notas":""},{"id":160,"destino":"San Juan Opico","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Quezaltepeque","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábados","horario":"4:00 pm - 4:30 pm","lugar":"Afuera de agencia Claro de San Juan Opico","notas":""},{"id":161,"destino":"San Juan Talpa","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: la Paz","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"10:00 am - 10:20 am","lugar":"Parque central","notas":""},{"id":162,"destino":"San Juan Talpa","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"11:15 am - 11:40 am","lugar":"Frente a Alcaldía","notas":""},{"id":163,"destino":"San Julián","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Jueves","Domingo"],"dias_texto":"Jueves y Domingo","horario":"9:30 am - 10:00 am","lugar":"Por la fuente en la Plaza El Balzamo, frente a Alcaldía","notas":""},{"id":164,"destino":"San Luis de La Reina","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:00 am - 11:30 am","lugar":"Parque Central","notas":""},{"id":165,"destino":"San Luis la Herradura","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: la Paz","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"12:00 pm - 12:30 pm","lugar":"En el parqueo de la Alcaldía de San Luis la Herradura","notas":""},{"id":166,"destino":"San Luis Talpa","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: la Paz","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"10:35 am - 11:15 am","lugar":"Frente a viva pizza","notas":""},{"id":167,"destino":"San Luis Talpa","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"12:00 pm - 1:00 pm","lugar":"Frente a Alcaldía","notas":""},{"id":168,"destino":"San Marcos","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"12:00 pm - 12:30 pm","lugar":"Cerca de el encuentro esquina de super selectos","notas":""},{"id":169,"destino":"San Martin","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":170,"destino":"San Matías","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:15 am - 11:45 am","lugar":"Parque frente a Alcaldía","notas":""},{"id":171,"destino":"San Miguel","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":172,"destino":"San Rafael Cedros","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Sensuntepeque","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"11:45 am - 12:15 pm","lugar":"Gasolinera Texaco","notas":""},{"id":173,"destino":"San Rafael Cedros","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"12:00 pm - 12:30 pm","lugar":"Afuera de Helados Boston","notas":""},{"id":174,"destino":"San Rafael Obrajuelo","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Usulutan","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"8:40 am - 9:00 am","lugar":"Frente a la Iglesia Católica","notas":""},{"id":175,"destino":"San Rafael Obrajuelos","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"9:45 am - 10:15 am","lugar":"Frente a Iglesia Católica","notas":""},{"id":176,"destino":"San Rafael Oriente","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"2:15 pm - 2:45 pm","lugar":"Parque Central","notas":""},{"id":177,"destino":"San Salvador - Metrogalerias","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 1:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":178,"destino":"San Salvador - Plaza Jerez","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":179,"destino":"San Salvador Centro Historico","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":180,"destino":"San Sebastian","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"11:00 am - 11:30 am","lugar":"Frente a caja de Crédito y Don Pollo","notas":""},{"id":181,"destino":"San Vicente","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Sensuntepeque","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"10:00 am - 11:00 am","lugar":"Esquina opuesta a Banco Agrícola, frente a Tropigas en el Parque Central","notas":""},{"id":182,"destino":"San Vicente","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":183,"destino":"Santa Ana Centro","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":184,"destino":"Santa Ana Plaza 33","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 1:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":185,"destino":"Santa Elena","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:30 am - 12:00 pm","lugar":"Frente a Iglesia","notas":""},{"id":186,"destino":"Santa Rosa de Lima","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: San Miguel","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"1:00 pm - 2:00 pm","lugar":"Parqueo la Ceiba que esta frente a Cafeteria Elizabeth y Presto","notas":""},{"id":187,"destino":"Santa Rosa de lima","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Apartir del 21 de abril - 2026)","notas":""},{"id":188,"destino":"Santa Tecla","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Miércoles","Sábado"],"dias_texto":"Miercoles y Sabado","horario":"1:00 pm - 3:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias","notas":"Costo Extra $0.50"},{"id":189,"destino":"Santiago de la frontera","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"10:00 am - 10:45 am","lugar":"Parque / Frente a Clínica","notas":""},{"id":190,"destino":"Santiago de María","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":191,"destino":"Santiago Nonualco","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Usulutan","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"8:00 am - 8:30 am","lugar":"Frente a la Iglesia Catolica a 10 metros de Farmacia Marsheilly","notas":""},{"id":192,"destino":"Santiago Nonualco","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"8:30 am - 9:30 am","lugar":"Parqueo fte a Liceo Juan Bueno","notas":""},{"id":193,"destino":"Santiago Texacuangos","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:45 am - 10:10 am","lugar":"Frente a Alcaldía","notas":""},{"id":194,"destino":"Santo Domingo","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"10:20 am - 10:45 am","lugar":"Frente a Alcaldía","notas":""},{"id":195,"destino":"Santo Tomas","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: la Paz","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"3:30 pm - 4:00 pm","lugar":"Afuera del centro comercial frente a la Curacao","notas":""},{"id":196,"destino":"Sensuntepeque","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Sensuntepeque","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"3:30 pm - 4:30 pm","lugar":"Parque Central, frente a Bancovi","notas":""},{"id":197,"destino":"Sensuntepeque","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"9:00 am- 11:00 pm","lugar":"Local De Entrega","notas":""},{"id":198,"destino":"Sesori","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"11:00 am - 11:45 am","lugar":"Parque Central","notas":""},{"id":199,"destino":"Sociedad","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"10:00 am - 10:45 am","lugar":"Parque central","notas":""},{"id":200,"destino":"Sonsonate","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":201,"destino":"Sonsonate","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Domingo"],"dias_texto":"Domingo","horario":"12:40 pm - 1:40 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":202,"destino":"Sonzacate","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Sonsonate","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"9:30 am - 10:00 am","lugar":"Frente Parque central","notas":""},{"id":203,"destino":"Sonzacate","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":204,"destino":"Sonzacate","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Domingo"],"dias_texto":"Domingo","horario":"11:50 am - 12:20 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":205,"destino":"Soyapango","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":206,"destino":"Soyapango - Plaza Mundo","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"10:00 am - 11:00 am","lugar":"Gasolinera Texaco salida de plaza mundo","notas":""},{"id":207,"destino":"Soyapango - Unicentro","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:45 am - 12:45 pm","lugar":"Sobre calle la fuente / fte a food court","notas":""},{"id":208,"destino":"Suchitoto","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"8:00 am - 9:00 am","lugar":"Parque Central","notas":""},{"id":209,"destino":"Tacachico","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"8:00 am - 9:00 am","lugar":"Parque frente a Alcaldía","notas":""},{"id":210,"destino":"Tecoluca","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"11:30 am -12:00 pm","lugar":"Parque Central","notas":""},{"id":211,"destino":"Tejutepeque","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"1:00 pm - 1:30 pm","lugar":"Parque central por las letras","notas":""},{"id":212,"destino":"Tejutla","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Chalatenango 2","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"10:00 am - 10:30 am","lugar":"En el parque frente a la iglesia","notas":""},{"id":213,"destino":"Terminal de Sonsonate","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Sonsonate","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"10:30 am - 11:00 am","lugar":"Adentro de la terminal nueva viendo hacia comercial Deras","notas":""},{"id":214,"destino":"Texistepeque","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Santa Ana","dias":["Lunes","Jueves"],"dias_texto":"Lunes y Jueves","horario":"1:15 pm - 1:45 pm","lugar":"Parque Central, Frente a la Iglesia Católica","notas":""},{"id":215,"destino":"Texistepeque","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:30 am - 10:00 am","lugar":"Costado del parque central, afuera de venta de tropigas Tony (Calle Libertad)","notas":""},{"id":216,"destino":"Tonacatepeque","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"2:00 pm - 2:30 pm","lugar":"Parque Central","notas":""},{"id":217,"destino":"Turín","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"11:15 am - 12:00 pm","lugar":"Parque frente a Alcaldía","notas":""},{"id":218,"destino":"Usulutan","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Usulutan","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"2:15 pm - 3:15 pm","lugar":"Parque central, frente a Banco Hipotecario","notas":""},{"id":219,"destino":"Usulutan","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":220,"destino":"Versalles","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Quezaltepeque","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábados","horario":"2:15 pm - 2:45 pm","lugar":"Gasolinera 1 de Ciudad Versalles","notas":""},{"id":221,"destino":"Zacatecoluca","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Oriente - Ruta: Usulutan","dias":["Martes","Viernes"],"dias_texto":"Martes y Viernes","horario":"9:50 am - 10:30 am","lugar":"Abajo del parque Calle Señorial 50 mts abajo de Credicampo, esquina opuesta a la casona","notas":""},{"id":222,"destino":"Zacatecoluca","encomendista":"Pedidos Express","tipo":"Agencia","ruta":"","dias":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"],"dias_texto":"Lunes a Sábado","horario":"9:00 am - 4:00 pm → Sábado 9:00 am - 12:00 pm","lugar":"Local De Entrega (Paquete Dura 3 Dias)","notas":""},{"id":223,"destino":"Zaragoza","encomendista":"Melo Express","tipo":"Punto de Ruta","ruta":"Ruta Puerto de la Libertad","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábados","horario":"1:00 pm - 1:30 pm","lugar":"Parque de la casa de la cultura","notas":""},{"id":224,"destino":"Zaragoza","encomendista":"Pedidos Express","tipo":"Punto de Ruta","ruta":"","dias":["Miércoles","Sábado"],"dias_texto":"Miércoles y Sábado","horario":"2:15 pm - 3:00 pm","lugar":"Fte a casa de la cultura / venta de dulces tipicos","notas":""}];
+
+const DIAS_ORDEN = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+const DIAS_CORTO = {"Lunes":"L","Martes":"M","Miércoles":"X","Jueves":"J","Viernes":"V","Sábado":"S","Domingo":"D"};
+
+let DATA = [];
+let filters = { q: "", encomendista: "", dia: "", tipo: "" };
+
+const todayIdx = (new Date().getDay() + 6) % 7; // lunes=0 ... domingo=6
+const TODAY = DIAS_ORDEN[todayIdx];
+document.getElementById('today-day').textContent = TODAY;
+
+function normalize(str){
+  return (str || "").toString().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+function render(){
+  const q = normalize(filters.q);
+  const filtered = DATA.filter(r => {
+    if (filters.encomendista && r.encomendista !== filters.encomendista) return false;
+    if (filters.tipo && r.tipo !== filters.tipo) return false;
+    if (filters.dia && !r.dias.includes(filters.dia)) return false;
+    if (q){
+      const hay = normalize(r.destino) + " " + normalize(r.lugar) + " " + normalize(r.ruta);
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('result-count').textContent =
+    filtered.length + (filtered.length === 1 ? " resultado" : " resultados") + " de " + DATA.length;
+
+  const container = document.getElementById('results');
+
+  if (filtered.length === 0){
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="big">Sin coincidencias</div>
+        <div>No encontramos un destino con esos filtros. Probá con otro nombre o quitá algún filtro.</div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(r => {
+    const esHoy = r.dias.includes(TODAY);
+    const encClass = r.encomendista === 'Melo Express' ? 'melo' : 'pedidos';
+    const diasHtml = DIAS_ORDEN.map(d => {
+      const on = r.dias.includes(d);
+      const isTodayPill = on && d === TODAY;
+      return `<span class="day-pill ${on ? 'on':''} ${isTodayPill ? 'today-pill':''}">${DIAS_CORTO[d]}</span>`;
+    }).join('');
+
+    return `
+      <div class="row ${esHoy ? 'today' : ''}">
+        <div class="col-dest">
+          <div class="dest-name">${escapeHtml(r.destino)}</div>
+          <div class="dest-tags">
+            <span class="tag ${encClass}">${escapeHtml(r.encomendista)}</span>
+            <span class="tag tipo">${escapeHtml(r.tipo)}</span>
+            ${esHoy ? '<span class="tag hoy">Hoy</span>' : ''}
+            ${r.notas ? `<span class="tag notas">${escapeHtml(r.notas)}</span>` : ''}
+          </div>
+        </div>
+        <div class="col-dias">${diasHtml}</div>
+        <div class="col-horario">
+          ${escapeHtml(r.horario)}
+          ${r.ruta ? `<span class="ruta-tag">${escapeHtml(r.ruta)}</span>` : ''}
+        </div>
+        <div class="col-lugar">${escapeHtml(r.lugar)}</div>
+        <div class="col-copy">
+          <button class="copy-btn" data-id="${r.id}" onclick="copyRecord(${r.id}, this)" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span class="copy-label">Copiar</span>
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function escapeHtml(s){
+  return (s || "").toString()
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function buildRecordText(r){
+  const lineas = [
+    r.destino,
+    r.encomendista + ' — ' + r.tipo,
+    r.ruta ? ('Ruta: ' + r.ruta) : null,
+    'Días: ' + r.dias_texto,
+    'Horario: ' + r.horario,
+    'Lugar: ' + r.lugar,
+    r.notas ? ('Notas: ' + r.notas) : null
+  ].filter(Boolean);
+  return lineas.join('\n');
+}
+
+function copyRecord(id, btnEl){
+  const r = DATA.find(x => x.id === id);
+  if (!r) return;
+  const texto = buildRecordText(r);
+
+  const marcarCopiado = () => {
+    const label = btnEl.querySelector('.copy-label');
+    const original = label.textContent;
+    btnEl.classList.add('copied');
+    label.textContent = 'Copiado ✓';
+    setTimeout(() => {
+      btnEl.classList.remove('copied');
+      label.textContent = original;
+    }, 1600);
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(texto).then(marcarCopiado).catch(() => fallbackCopy(texto, marcarCopiado));
+  } else {
+    fallbackCopy(texto, marcarCopiado);
+  }
+}
+
+function fallbackCopy(texto, onDone){
+  const ta = document.createElement('textarea');
+  ta.value = texto;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); onDone(); } catch(e) { /* silencioso */ }
+  document.body.removeChild(ta);
+}
+
+function setupChipGroup(groupId, filterKey){
+  const group = document.getElementById(groupId);
+  group.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      filters[filterKey] = chip.dataset.val;
+      render();
+    });
+  });
+}
+
+setupChipGroup('group-encomendista', 'encomendista');
+setupChipGroup('group-dia', 'dia');
+setupChipGroup('group-tipo', 'tipo');
+
+// marcar visualmente el chip de "hoy" en el grupo de días
+document.querySelectorAll('#group-dia .chip').forEach(chip => {
+  if (chip.dataset.val === TODAY) chip.classList.add('is-today');
+});
+
+document.getElementById('search').addEventListener('input', (e) => {
+  filters.q = e.target.value;
+  render();
+});
+
+document.getElementById('clear-btn').addEventListener('click', () => {
+  filters = { q: "", encomendista: "", dia: "", tipo: "" };
+  document.getElementById('search').value = "";
+  document.querySelectorAll('.chip-group').forEach(g => {
+    g.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    g.querySelector('.chip[data-val=""]').classList.add('active');
+  });
+  render();
+});
+
+// Datos embebidos directamente en el archivo: funciona con doble clic,
+// en GitHub Pages, o en cualquier servidor, sin depender de un archivo externo.
+DATA = DATA_EMBEBIDA;
+render();
+</script>
+
+</body>
+</html>

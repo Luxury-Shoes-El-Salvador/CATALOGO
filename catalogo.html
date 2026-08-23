@@ -1207,7 +1207,7 @@ async function loadData(){
         return {
           id:       cv(r[C.id]),
           talla:    cv(r[C.tallaUSA]),
-          cm:       cv(r[C.tallaCM]),
+          cm:       cv(r[C.tallaCM]).replace(/\s*cm\s*$/i, ''),
           precio:   cleanPrice(r[C.precioFinal]),
           precioEst:cleanPrice(r[C.precioEst]),
           modelo:   cv(r[C.modelo])||'Sin modelo',
